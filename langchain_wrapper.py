@@ -3,8 +3,8 @@ from .config import Config
 from .analyzer import PBISemanticAnalyzer
 
 class PBISemanticAnalyzerTool(BaseTool):
-    name = "pbi_semantic_analyzer"
-    description = "Analizza i modelli semantici Power BI di uno o più workspace e restituisce un JSON strutturato."
+    name: str = "pbi_semantic_analyzer"
+    description: str = "Analizza i modelli semantici Power BI di uno o più workspace e restituisce un JSON strutturato."
 
     def _run(self, config_path: str = ".env"):
         config = Config(env_path=config_path)
