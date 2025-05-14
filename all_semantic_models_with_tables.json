@@ -1,0 +1,578 @@
+[
+  {
+    "workspace_name": "Heros - Lake House",
+    "workspace_id": "d88029db-6736-4691-a8d7-d2c7b455d96c",
+    "dataset_name": "Heros_lakehouse",
+    "dataset_id": "1085ff05-8dd0-4226-8162-7b2a28cf8249",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "Heros - Lake House",
+    "workspace_id": "d88029db-6736-4691-a8d7-d2c7b455d96c",
+    "dataset_name": "heros_sales_curated_dataset",
+    "dataset_id": "8828ce66-bad8-4e70-b9cf-8a239cd5c893",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "Heros - Lake House",
+    "workspace_id": "d88029db-6736-4691-a8d7-d2c7b455d96c",
+    "dataset_name": "DataflowsStagingLakehouse1",
+    "dataset_id": "67522c5f-71bb-46e6-9276-b24977f24e52",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "Heros - Lake House",
+    "workspace_id": "d88029db-6736-4691-a8d7-d2c7b455d96c",
+    "dataset_name": "DataflowsStagingWarehouse",
+    "dataset_id": "f202e485-9b25-4886-bf58-6c1cdf9124e4",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "Heros - Lake House",
+    "workspace_id": "d88029db-6736-4691-a8d7-d2c7b455d96c",
+    "dataset_name": "HeroDWH",
+    "dataset_id": "08307529-7090-4ed7-a267-7bd3f35e09a5",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "Heros - Lake House",
+    "workspace_id": "d88029db-6736-4691-a8d7-d2c7b455d96c",
+    "dataset_name": "Heros_Warehouse",
+    "dataset_id": "2dd14f97-e59b-462f-a549-5fa1ee8e000b",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "Heros - Lake House",
+    "workspace_id": "d88029db-6736-4691-a8d7-d2c7b455d96c",
+    "dataset_name": "test",
+    "dataset_id": "34741bf4-8bcc-4290-9f61-ce0506bf72a3",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "Heros - Lake House",
+    "workspace_id": "d88029db-6736-4691-a8d7-d2c7b455d96c",
+    "dataset_name": "1brows",
+    "dataset_id": "5e9d2667-9499-409c-bb3e-f81712f7e8ce",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "Admin monitoring",
+    "workspace_id": "776a5958-b3f9-4d79-86b1-a9ad1ed3c70a",
+    "dataset_name": "Feature Usage and Adoption",
+    "dataset_id": "a18b42e5-d3d2-4952-9688-35e121ed12ea",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "Admin monitoring",
+    "workspace_id": "776a5958-b3f9-4d79-86b1-a9ad1ed3c70a",
+    "dataset_name": "Purview Hub",
+    "dataset_id": "dedb90b2-6588-49ce-a5cd-d20606c00992",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "DevOps - VSCode Integration",
+    "workspace_id": "b71733d6-a2da-4a61-8b4e-7199444f63b1",
+    "dataset_name": "vscode_lakehouse",
+    "dataset_id": "33230e23-3f08-4133-b9a3-c7f94e877c25",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "DevOps - VSCode Integration",
+    "workspace_id": "b71733d6-a2da-4a61-8b4e-7199444f63b1",
+    "dataset_name": "CJ_Fabric",
+    "dataset_id": "ca27da31-aec0-4bfd-88b3-89e184b3078a",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "Large Dataset Test 2",
+    "workspace_id": "87eb21ec-1ce7-48fc-8605-69086d2edcd8",
+    "dataset_name": "CI",
+    "dataset_id": "f4193de3-47db-425b-ba65-7b68e9ac1bc4",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "Large Dataset Test 2",
+    "workspace_id": "87eb21ec-1ce7-48fc-8605-69086d2edcd8",
+    "dataset_name": "100_000_rows",
+    "dataset_id": "d4675f9c-c518-4b74-9142-1c65895b2f9a",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "Large Dataset Test 2",
+    "workspace_id": "87eb21ec-1ce7-48fc-8605-69086d2edcd8",
+    "dataset_name": "48m_rows_clustered",
+    "dataset_id": "3105435a-eecd-44ab-b78b-ddb57bafea72",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "Large Dataset Test 2",
+    "workspace_id": "87eb21ec-1ce7-48fc-8605-69086d2edcd8",
+    "dataset_name": "Direct_250m_rows",
+    "dataset_id": "afbf911b-274e-4fec-be84-ec10892ac0b0",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "data-science-demo",
+    "workspace_id": "2eec566b-edf0-41e2-902b-6ba186e6557b",
+    "dataset_name": "datascience",
+    "dataset_id": "ab0e8344-b515-4ecc-b902-9507affaae18",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "data-science-demo",
+    "workspace_id": "2eec566b-edf0-41e2-902b-6ba186e6557b",
+    "dataset_name": "datascience_wh",
+    "dataset_id": "415426a6-c8df-4b39-a9a5-40468c66fb70",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "PFO - Promo Flyer Optimizer",
+    "workspace_id": "86cac184-abb3-4d12-b3ed-d14038277f75",
+    "dataset_name": "PFO",
+    "dataset_id": "7466b9fb-fd67-4d72-ad8b-d89cfa07452e",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "ESG - Social and Governance",
+    "workspace_id": "3c2ac6d9-fc76-4f0e-bad5-2722d48ebd0f",
+    "dataset_name": "SDS_SGDE_SocialAndGovernance_ProcessedSocialAndGovernanceData_LH",
+    "dataset_id": "ef04d7e9-519d-43ea-a632-ca42a2b093c1",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "ESG - Social and Governance",
+    "workspace_id": "3c2ac6d9-fc76-4f0e-bad5-2722d48ebd0f",
+    "dataset_name": "SDS_SGDE_SocialAndGovernance_ComputedSocialAndGovernanceMetrics_LH",
+    "dataset_id": "9f7cafad-99fa-46d2-90b0-1ad9d63e8b09",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "ESG - Social and Governance",
+    "workspace_id": "3c2ac6d9-fc76-4f0e-bad5-2722d48ebd0f",
+    "dataset_name": "SDS_SGDE_SocialAndGovernance_ConfigAndDemoData_LH",
+    "dataset_id": "1440e69f-6933-496a-9ad8-fb1f68343f0a",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "ESG - Social and Governance",
+    "workspace_id": "3c2ac6d9-fc76-4f0e-bad5-2722d48ebd0f",
+    "dataset_name": "SDS_SGDE_SocialAndGovernance_SocialAndGovernanceMetricsReportDataset_DTST",
+    "dataset_id": "6a512b2c-f7e4-497f-9749-c3b415af70b0",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "ESG - Data Estate",
+    "workspace_id": "fc158d05-daa9-4f78-8f0b-d8df23c1ad68",
+    "dataset_name": "SDS_ESGDE_ESG_Data_Estate_ComputedESGMetrics_LH",
+    "dataset_id": "55546a53-946b-4efc-a071-313d1fba44c7",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "ESG - Data Estate",
+    "workspace_id": "fc158d05-daa9-4f78-8f0b-d8df23c1ad68",
+    "dataset_name": "SDS_ESGDE_ESG_Data_Estate_ConfigAndDemoData_LH",
+    "dataset_id": "19135ee1-6fe9-411c-9494-ad6966b3c6a5",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "ESG - Data Estate",
+    "workspace_id": "fc158d05-daa9-4f78-8f0b-d8df23c1ad68",
+    "dataset_name": "SDS_ESGDE_ESG_Data_Estate_ProcessedESGData_LH",
+    "dataset_id": "8d41c19e-b486-4f64-9d5a-18a6a9d1a25a",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "ESG - Data Estate",
+    "workspace_id": "fc158d05-daa9-4f78-8f0b-d8df23c1ad68",
+    "dataset_name": "SDS_ESGDE_ESG_Data_Estate_IngestedRawData_LH",
+    "dataset_id": "05f4c4b2-b636-456f-ac2f-89967d9bd6d5",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "ESG - Data Estate",
+    "workspace_id": "fc158d05-daa9-4f78-8f0b-d8df23c1ad68",
+    "dataset_name": "SDS_ESGDE_ESG_Data_Estate_CSRDMetricsReportDataset_DTST",
+    "dataset_id": "ec6b794e-3832-47ad-a31c-d6e954ff74e6",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "CDP - monitor accordi quadro",
+    "workspace_id": "392085e4-5f10-4a43-9482-0467281dd34a",
+    "dataset_name": "CDP_lake",
+    "dataset_id": "de730d63-9e58-44a1-829b-7df58f94cc37",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "CDP - monitor accordi quadro",
+    "workspace_id": "392085e4-5f10-4a43-9482-0467281dd34a",
+    "dataset_name": "DataflowsStagingLakehouse",
+    "dataset_id": "3df5855d-56a7-45dc-a2c0-4682a156a025",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "CDP - monitor accordi quadro",
+    "workspace_id": "392085e4-5f10-4a43-9482-0467281dd34a",
+    "dataset_name": "DataflowsStagingWarehouse",
+    "dataset_id": "48cdb549-f6f3-4d23-ba09-32170e66a4b5",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "ESG - Azure emissions insights",
+    "workspace_id": "40268f74-68b1-4aa8-8be3-fa81536a2d77",
+    "dataset_name": "SDS_MAEI_azure_emissions_insights_AnalyzeAzureEmissionsDataset_DTST",
+    "dataset_id": "eab897e7-4527-44a7-83b3-c5cb5ee37363",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "ESG - Environmental",
+    "workspace_id": "8f6fbe78-128b-4659-96ae-b761e7d55273",
+    "dataset_name": "SDS_EMA_E_MetricAnalysisReportDataset_DTST",
+    "dataset_id": "ba7a407d-28b0-4738-ac3b-88f7be81457e",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "Demo - Data Science",
+    "workspace_id": "785ead45-0679-4af8-b50b-eea4504bdfb8",
+    "dataset_name": "ds_sales",
+    "dataset_id": "5af59743-7f31-4b4b-b82b-85569e7949e2",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "Benetton Retail Analytics",
+    "workspace_id": "dd50d936-a0f6-4e54-adff-caeb9c9213a1",
+    "dataset_name": "benetton_lakehouse",
+    "dataset_id": "fd08ceeb-d6b6-424c-aca6-0b0710b96b9f",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "Benetton Retail Analytics",
+    "workspace_id": "dd50d936-a0f6-4e54-adff-caeb9c9213a1",
+    "dataset_name": "_retail_analytics",
+    "dataset_id": "791f33c9-9823-4431-ba01-c3295f1131f1",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "Benetton Retail Analytics",
+    "workspace_id": "dd50d936-a0f6-4e54-adff-caeb9c9213a1",
+    "dataset_name": "export",
+    "dataset_id": "2fb9e340-b5c2-419a-a58b-5a7c0ffd372f",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "Lavazza Fabric Sandbox",
+    "workspace_id": "fb71c730-0841-401e-9aa7-b38cfadb4f8f",
+    "dataset_name": "AM_LH_Test1",
+    "dataset_id": "e8c523e7-faa0-4b89-aa6d-668a7de74b31",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "Lavazza Fabric Sandbox",
+    "workspace_id": "fb71c730-0841-401e-9aa7-b38cfadb4f8f",
+    "dataset_name": "AM_WH_Test1",
+    "dataset_id": "5fba9787-558f-42e6-8a36-5abed2511dc5",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "Lavazza Fabric Sandbox",
+    "workspace_id": "fb71c730-0841-401e-9aa7-b38cfadb4f8f",
+    "dataset_name": "DataflowsStagingLakehouse",
+    "dataset_id": "78c17150-e552-4b80-98a4-27c34cf1e12a",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "Lavazza Fabric Sandbox",
+    "workspace_id": "fb71c730-0841-401e-9aa7-b38cfadb4f8f",
+    "dataset_name": "DataflowsStagingWarehouse",
+    "dataset_id": "b1a2df25-6ca8-4cf4-af29-e3945853b9e4",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "Lavazza Fabric Sandbox",
+    "workspace_id": "fb71c730-0841-401e-9aa7-b38cfadb4f8f",
+    "dataset_name": "AM_Report_Test1",
+    "dataset_id": "2f7d7386-e008-49f4-8a49-a38e94d62bfe",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "Lavazza Fabric Sandbox",
+    "workspace_id": "fb71c730-0841-401e-9aa7-b38cfadb4f8f",
+    "dataset_name": "AM_WH_Test2_xPipe",
+    "dataset_id": "2111e20d-0e36-4cdc-9e65-84435869327e",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "Lavazza Fabric Sandbox",
+    "workspace_id": "fb71c730-0841-401e-9aa7-b38cfadb4f8f",
+    "dataset_name": "prova2",
+    "dataset_id": "40a6ad93-aa82-4a8a-aa9b-2e6369324a12",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "Lavazza Fabric Sandbox",
+    "workspace_id": "fb71c730-0841-401e-9aa7-b38cfadb4f8f",
+    "dataset_name": "large_dataset",
+    "dataset_id": "0b6fa281-849d-4f16-92e1-5b73adf4934e",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "Lavazza Fabric Sandbox",
+    "workspace_id": "fb71c730-0841-401e-9aa7-b38cfadb4f8f",
+    "dataset_name": "FG_LH",
+    "dataset_id": "14f8540f-b74c-4e48-bb18-369535a74d8a",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "Lavazza Fabric Sandbox",
+    "workspace_id": "fb71c730-0841-401e-9aa7-b38cfadb4f8f",
+    "dataset_name": "Test1_lakehouse",
+    "dataset_id": "6634b252-2a5d-453d-b301-47774c36aba8",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "FABRIC_DEMO_2025",
+    "workspace_id": "a6305175-0fba-445e-9949-3c34ceebc7b7",
+    "dataset_name": "source_data",
+    "dataset_id": "e7dfd03d-46cf-473f-82a9-012571f3d50f",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "FABRIC_DEMO_2025",
+    "workspace_id": "a6305175-0fba-445e-9949-3c34ceebc7b7",
+    "dataset_name": "ing_framework_metadata_lake",
+    "dataset_id": "a52bc82e-f5b2-4350-80a2-e19a1c27d7be",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "FABRIC_DEMO_2025",
+    "workspace_id": "a6305175-0fba-445e-9949-3c34ceebc7b7",
+    "dataset_name": "ing_framework_metadata_lake2",
+    "dataset_id": "a2a76d0e-a280-445a-b05f-ef3ce1094551",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "large_dataset_1",
+    "workspace_id": "257344da-8b60-4728-ae7b-163db01ac1ba",
+    "dataset_name": "large_lake",
+    "dataset_id": "50e8a34d-9412-454f-8306-a904d517df49",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "large_dataset_1",
+    "workspace_id": "257344da-8b60-4728-ae7b-163db01ac1ba",
+    "dataset_name": "50m_rows",
+    "dataset_id": "70c3820b-e546-47a9-8ccd-40e1c91383ba",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "large_dataset_1",
+    "workspace_id": "257344da-8b60-4728-ae7b-163db01ac1ba",
+    "dataset_name": "pl_25k_rows",
+    "dataset_id": "84663371-a7e5-4a2f-8a04-17b30cf27c13",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "large_dataset_1",
+    "workspace_id": "257344da-8b60-4728-ae7b-163db01ac1ba",
+    "dataset_name": "DataflowsStagingLakehouse",
+    "dataset_id": "8dba5a72-ac3d-4c2e-93ac-de88423fed91",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "large_dataset_1",
+    "workspace_id": "257344da-8b60-4728-ae7b-163db01ac1ba",
+    "dataset_name": "DataflowsStagingWarehouse",
+    "dataset_id": "c95d7a32-3749-4bea-95a1-a4826bc4f4a9",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "large_dataset_1",
+    "workspace_id": "257344da-8b60-4728-ae7b-163db01ac1ba",
+    "dataset_name": "pl_sample_2",
+    "dataset_id": "6775acc4-79b9-4e1d-ad5c-1ca73e58a1a8",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "large_dataset_1",
+    "workspace_id": "257344da-8b60-4728-ae7b-163db01ac1ba",
+    "dataset_name": "pl_100r_307c",
+    "dataset_id": "0f619122-1f58-4857-902d-44765358768b",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "large_dataset_1",
+    "workspace_id": "257344da-8b60-4728-ae7b-163db01ac1ba",
+    "dataset_name": "100kr_307c_cleaned",
+    "dataset_id": "57734699-2e6f-4882-9678-0ed2eba0f11e",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "large_dataset_1",
+    "workspace_id": "257344da-8b60-4728-ae7b-163db01ac1ba",
+    "dataset_name": "export_cub_last_v3",
+    "dataset_id": "3d7e60e3-5576-44d2-9b07-98aa77687339",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "large_dataset_1",
+    "workspace_id": "257344da-8b60-4728-ae7b-163db01ac1ba",
+    "dataset_name": "export_cub_last_v3_cleaned",
+    "dataset_id": "2f6dc9af-ebb4-466a-b038-5a12679c28ef",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "large_dataset_1",
+    "workspace_id": "257344da-8b60-4728-ae7b-163db01ac1ba",
+    "dataset_name": "export_cup_last_v3_pivoted",
+    "dataset_id": "360d9c44-833e-4053-a9d4-02c6462d6c15",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "large_dataset_1",
+    "workspace_id": "257344da-8b60-4728-ae7b-163db01ac1ba",
+    "dataset_name": "export_cup_last_v3_pivoted_encoded",
+    "dataset_id": "66b1f8ce-1b90-4a32-b372-00ae5d7c5d16",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "large_dataset_1",
+    "workspace_id": "257344da-8b60-4728-ae7b-163db01ac1ba",
+    "dataset_name": "Direct_500m_rows_clustered",
+    "dataset_id": "acc80a94-8b97-494b-8535-6d2d957aa6ee",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "large_dataset_1",
+    "workspace_id": "257344da-8b60-4728-ae7b-163db01ac1ba",
+    "dataset_name": "Direct_15bn_rows_1KPIcolumn",
+    "dataset_id": "05e9cb1d-47d3-493a-8763-5424a551026e",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "metrics 2",
+    "workspace_id": "c764f4b5-fa99-445e-83b4-94b039fdab0e",
+    "dataset_name": "Fabric Capacity Metrics",
+    "dataset_id": "5817d2eb-9d74-4f24-95ab-06865521c4d7",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "metrics 1",
+    "workspace_id": "e6f862d0-224c-401d-80ea-35c516123331",
+    "dataset_name": "Fabric Capacity Metrics",
+    "dataset_id": "cbec31d7-dc22-4cdf-8780-405b96589bf4",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "it_help_desk",
+    "workspace_id": "48fb303e-b56a-456c-84a2-e2bf63aa477c",
+    "dataset_name": "it_help_desk_lakehouse",
+    "dataset_id": "2b0bdf90-97f1-401f-a8a2-388043162fcd",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "dtb_dev",
+    "workspace_id": "8aa9850d-96de-4bec-a888-b62d62045760",
+    "dataset_name": "dtb_dev_wh",
+    "dataset_id": "11ed6d4d-5659-4e20-85e5-01e9a38dcb97",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "sap_bom_extractor",
+    "workspace_id": "309c9617-0d6d-4384-a92c-5d58c6179124",
+    "dataset_name": "lakehouse_bom",
+    "dataset_id": "7f74aad2-1934-4482-8a18-5b87e88d4468",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "sap_bom_extractor_2",
+    "workspace_id": "78588664-a41c-47f1-b60c-772fd17f591d",
+    "dataset_name": "SAP BOM extractor",
+    "dataset_id": "acd4fa2b-729a-4cf5-afec-65bc5b4135f9",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "sap_bom_extractor_2",
+    "workspace_id": "78588664-a41c-47f1-b60c-772fd17f591d",
+    "dataset_name": "Lakehouse_SAP_BOM_EXTRACTOR",
+    "dataset_id": "8227d0bb-e8d1-4613-8335-d0f7a695d002",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  },
+  {
+    "workspace_name": "COESIA",
+    "workspace_id": "e14966ea-bbac-46f7-9cee-8c561b1ab3f4",
+    "dataset_name": "coesia_boomi_test",
+    "dataset_id": "ab20d616-236f-4d9c-9428-136038335db9",
+    "tables": null,
+    "dmv_error": "name 'AdomdConnection' is not defined"
+  }
+]
