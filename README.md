@@ -39,6 +39,17 @@ Python module for large-scale analysis of semantic models published on Power BI 
    - If successful, your accessible workspaces will be listed
 
 ## Notes
+
+## Known Issues
+
+**Attenzione:** Al momento l'utilizzo delle DMV tramite Pyadomd (es. estrazione tabelle via XMLA/DMV) non funziona correttamente su Windows, a causa di problemi di caricamento delle DLL native e dipendenze di ADOMD.NET. 
+
+- Anche se tutte le DLL richieste sono presenti nella cartella `lib`, la libreria Pyadomd potrebbe non riuscire a caricare alcune dipendenze native (es. `System.Data.SqlXml.dll`, `Microsoft.Data.SqlClient.dll`).
+- L'errore tipico è "Could not load file or assembly 'Microsoft.AnalysisServices.AdomdClient' or one of its dependencies".
+- Il supporto per l'accesso alle DMV è in fase di troubleshooting e la soluzione non è ancora stabile.
+
+**Workaround**: consultare `DLL_LIST.txt` per la lista delle DLL richieste e seguire eventuali aggiornamenti nel repository.
+
 - No app registration is required: the public Power BI client_id is used (same as Tabular Editor/DAX Studio)
 - MFA is fully supported via device code flow
 - For custom integrations, use the `PowerBIRestClient` class in `clients/rest_client.py`
