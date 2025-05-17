@@ -42,17 +42,23 @@ Python module for large-scale analysis of semantic models published on Power BI 
 
 ## Known Issues
 
-**Attenzione:** Al momento l'utilizzo delle DMV tramite Pyadomd (es. estrazione tabelle via XMLA/DMV) non funziona correttamente su Windows, a causa di problemi di caricamento delle DLL native e dipendenze di ADOMD.NET. 
+### Autenticazione ADOMD.NET / pyadomd su Power BI XMLA
 
-- Anche se tutte le DLL richieste sono presenti nella cartella `lib`, la libreria Pyadomd potrebbe non riuscire a caricare alcune dipendenze native (es. `System.Data.SqlXml.dll`, `Microsoft.Data.SqlClient.dll`).
-- L'errore tipico è "Could not load file or assembly 'Microsoft.AnalysisServices.AdomdClient' or one of its dependencies".
-- Il supporto per l'accesso alle DMV è in fase di troubleshooting e la soluzione non è ancora stabile.
+- **Non è più un problema di librerie native/DLL**: ora tutte le dipendenze e le DLL risultano correttamente caricate e individuate dal sistema.
+- **Il problema attuale è legato all'autenticazione**: la connessione tramite pyadomd/ADOMD.NET agli endpoint XMLA di Power BI fallisce se si utilizza un access token ottenuto tramite device code flow (login interattivo). Questo tipo di token funziona con le REST API di Power BI, ma non è accettato da ADOMD.NET per l'accesso XMLA.
+- **Sono richiesti token specifici**: ADOMD.NET accetta solo token ottenuti tramite grant_type `client_credentials` (service principal) o, in alcuni casi, grant_type `password` (login diretto, se consentito dal tenant). I token device code flow non sono supportati per l'accesso XMLA.
+- **Soluzione consigliata**: utilizzare un service principal abilitato per l'accesso XMLA e ottenere un token con grant_type `client_credentials`.
+- **Workspace Premium/PPU**: si ricorda che solo i workspace Power BI Premium o Premium Per User supportano l'accesso XMLA.
+- **[TODO]**: Il testing completo dell'accesso tramite app registration/service principal non è ancora stato ultimato e il ciclo di accesso alle DMV tramite ADOMD.NET è ancora in fase di chiusura. Aggiornamenti seguiranno.
+
+### Pulizia dipendenze/librerie
+
+- È necessario effettuare una revisione e pulizia delle dipendenze nel progetto per rimuovere librerie non più utilizzate o superflue, ora che la fase di troubleshooting sulle DLL è conclusa. Consultare `DLL_LIST.txt` e la sezione requirements per aggiornamenti futuri.
 
 **Workaround**: consultare `DLL_LIST.txt` per la lista delle DLL richieste e seguire eventuali aggiornamenti nel repository.
 
 - No app registration is required: the public Power BI client_id is used (same as Tabular Editor/DAX Studio)
 - MFA is fully supported via device code flow
-- For custom integrations, use the `PowerBIRestClient` class in `clients/rest_client.py`
 
 ## Example
 See `test_powerbi_connection.py` for a minimal working example.

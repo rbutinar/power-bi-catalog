@@ -23,3 +23,5 @@ data/
 # data
 *.json
 
+# DLL (non versionare binari)
+*.dll
