@@ -4,6 +4,7 @@ __pycache__/
 
 # Virtual environment
 .venv/
+.venv38
 
 # Local environment variables
 .env
