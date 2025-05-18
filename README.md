@@ -7,17 +7,33 @@
 Python module for large-scale analysis of semantic models published on Power BI Service. Designed for agentic integration (e.g., LangChain).
 
 ## Key Features
-- User authentication via MSAL device code flow (with public client_id, no app registration required)
-- Power BI REST API navigation (workspaces, datasets)
-- XMLA endpoint connection (DMV extraction)
-- Structured JSON output (Pydantic)
-- LangChain wrapper (Tool/RunnableLambda)
+- **Authentication Options**:
+  - User authentication via MSAL device code flow (with public client_id, no app registration required)
+  - Service Principal authentication (app registration) for automated/headless scenarios
+- **Power BI REST API** navigation (workspaces, datasets)
+- **XMLA endpoint connection** (DMV extraction) with both user and service principal auth
+- **Tenant-wide analysis** to extract metadata from all accessible workspaces and datasets
+- **Structured JSON output** (Pydantic)
+- **LangChain wrapper** (Tool/RunnableLambda)
 
 ## Setup
+
+### User Authentication (Interactive)
 - Copy `.env.example` to `.env` and set the required variables. At minimum, set:
   ```
   POWERBI_PUBLIC_CLIENT_ID=d3590ed6-52b3-4102-aeff-aad2292ab01c
   ```
+
+### Service Principal Authentication (Automated/Headless)
+- Register an app in Azure AD and grant it appropriate permissions in Power BI Admin Portal
+- Add the following to your `.env` file:
+  ```
+  CLIENT_ID=your-app-registration-client-id
+  TENANT_ID=your-tenant-id
+  SECRET_VALUE=your-client-secret
+  ```
+- For XMLA/pyadomd access, ensure the service principal is added as a member to the target workspaces
+
 - Other variables (e.g., for OpenAI) are optional unless you use those features.
 - The project uses [python-dotenv](https://pypi.org/project/python-dotenv/) to load environment variables from `.env`.
 
@@ -26,39 +42,90 @@ Python module for large-scale analysis of semantic models published on Power BI 
 - See `requirements.txt` for dependencies
 
 ## Usage
+
 1. Configure environment variables in `.env`
 2. Install dependencies:
    ```sh
    pip install -r requirements.txt
    ```
-3. Test authentication and connection:
-   ```sh
-   python test_powerbi_connection.py
-   ```
-   - You will be prompted to authenticate via device code flow (open the URL and enter the code)
-   - If successful, your accessible workspaces will be listed
+
+### Interactive User Authentication
+```sh
+python test_powerbi_connection.py
+```
+- You will be prompted to authenticate via device code flow (open the URL and enter the code)
+- If successful, your accessible workspaces will be listed
+
+### Service Principal Authentication
+```sh
+python test_pbi_service_principal_api.py
+```
+- Uses client credentials flow with your app registration
+- Lists all workspaces accessible to the service principal
+
+### XMLA/pyadomd Connection with Service Principal
+```sh
+python test_pyadomd_service_principal.py
+```
+- Connects to a specific dataset using XMLA endpoint
+- Extracts table metadata using DMVs
+
+### Full Tenant Analysis
+```sh
+python pbi_tenant_analyzer.py
+```
+- Scans all workspaces and datasets accessible to the service principal
+- Extracts detailed metadata for each dataset
+- Generates a comprehensive JSON report
 
 ## Notes
 
+### Authentication Methods
+
+- **User Authentication (Interactive)**:
+  - Uses device code flow with public client ID
+  - Supports MFA
+  - Works with REST APIs but not with XMLA/pyadomd
+  - No app registration required
+
+- **Service Principal Authentication (Automated)**:
+  - Uses client credentials flow with app registration
+  - Works with both REST APIs and XMLA/pyadomd
+  - Requires proper configuration in Azure AD and Power BI Admin Portal
+  - Service principal must be added as a member to workspaces for XMLA access
+
+### XMLA/pyadomd Requirements
+
+- **Workspace Type**: Only Premium, Fabric, or PPU workspaces support XMLA endpoints
+- **Connection String Format**:
+  ```
+  Provider=MSOLAP;Data Source=powerbi://api.powerbi.com/v1.0/myorg/<workspace>;
+  Initial Catalog=<dataset>;User ID=app:<client_id>@<tenant_id>;
+  Password=<client_secret>;Integrated Security=ClaimsToken;
+  ```
+- **Permissions**: Service principal must have at least Viewer access to the workspace
+
+### Tenant Analysis
+
+The `pbi_tenant_analyzer.py` script provides a comprehensive solution for analyzing an entire Power BI tenant:
+
+- Scans all accessible workspaces using admin REST APIs
+- Lists all datasets in each workspace
+- Extracts detailed metadata for each dataset using XMLA/pyadomd
+- Generates structured JSON output with tables, columns, measures, and relationships
+- Creates a summary report with statistics about the tenant
+
 ## Known Issues
 
-### Autenticazione ADOMD.NET / pyadomd su Power BI XMLA
+- **Personal Workspaces**: XMLA access may not work on personal workspaces, even if they are on Premium capacity
+- **Trial Capacities**: Some features may be limited on Fabric Trial (FT1) capacities
+- **Propagation Delay**: Changes to service principal permissions may take up to an hour to propagate
 
-- **Non è più un problema di librerie native/DLL**: ora tutte le dipendenze e le DLL risultano correttamente caricate e individuate dal sistema.
-- **Il problema attuale è legato all'autenticazione**: la connessione tramite pyadomd/ADOMD.NET agli endpoint XMLA di Power BI fallisce se si utilizza un access token ottenuto tramite device code flow (login interattivo). Questo tipo di token funziona con le REST API di Power BI, ma non è accettato da ADOMD.NET per l'accesso XMLA.
-- **Sono richiesti token specifici**: ADOMD.NET accetta solo token ottenuti tramite grant_type `client_credentials` (service principal) o, in alcuni casi, grant_type `password` (login diretto, se consentito dal tenant). I token device code flow non sono supportati per l'accesso XMLA.
-- **Soluzione consigliata**: utilizzare un service principal abilitato per l'accesso XMLA e ottenere un token con grant_type `client_credentials`.
-- **Workspace Premium/PPU**: si ricorda che solo i workspace Power BI Premium o Premium Per User supportano l'accesso XMLA.
-- **[TODO]**: Il testing completo dell'accesso tramite app registration/service principal non è ancora stato ultimato e il ciclo di accesso alle DMV tramite ADOMD.NET è ancora in fase di chiusura. Aggiornamenti seguiranno.
+## Dependencies
 
-### Pulizia dipendenze/librerie
-
-- È necessario effettuare una revisione e pulizia delle dipendenze nel progetto per rimuovere librerie non più utilizzate o superflue, ora che la fase di troubleshooting sulle DLL è conclusa. Consultare `DLL_LIST.txt` e la sezione requirements per aggiornamenti futuri.
-
-**Workaround**: consultare `DLL_LIST.txt` per la lista delle DLL richieste e seguire eventuali aggiornamenti nel repository.
-
-- No app registration is required: the public Power BI client_id is used (same as Tabular Editor/DAX Studio)
-- MFA is fully supported via device code flow
+- The ADOMD.NET DLLs in the `lib/` folder are required for XMLA connectivity
+- Microsoft Analysis Services OLEDB provider (MSOLAP) must be installed on your system
+- The project is Windows-only for XMLA/pyadomd functionality
 
 ## Example
 See `test_powerbi_connection.py` for a minimal working example.
