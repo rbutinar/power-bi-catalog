@@ -39,13 +39,39 @@ Python module for large-scale analysis of semantic models published on Power BI 
 
 ## Usage
 
-### Full Tenant Analysis (Recommended)
+### Tenant Analysis
 Run the main analyzer with service principal authentication:
+
+#### Full Tenant Analysis
 ```bash
 python pbi_tenant_analyzer.py
 ```
 - Scans all workspaces and datasets in the tenant.
 - Extracts detailed metadata and outputs structured JSON.
+
+#### Filtered Analysis
+```bash
+# Filter by workspace name (case-insensitive partial match)
+python pbi_tenant_analyzer.py --workspace "Finance"
+
+# Filter by exact workspace ID
+python pbi_tenant_analyzer.py --workspace-id "3d9b93c6-7b6d-4801-a491-1738910904fd"
+
+# Filter by dataset/semantic model name (case-insensitive partial match)
+python pbi_tenant_analyzer.py --dataset "Sales"
+
+# Filter by exact dataset ID
+python pbi_tenant_analyzer.py --dataset-id "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+
+# Combine multiple filters
+python pbi_tenant_analyzer.py --workspace "Finance" --dataset "Budget"
+
+# Combine with SQLite database storage
+python pbi_tenant_analyzer.py --workspace "Finance" --dataset "Sales" --sqlite
+```
+- Analyzes only specified workspaces and/or datasets instead of the entire tenant.
+- Useful for targeted analysis or when full tenant scanning is too time-consuming.
+- Combining workspace and dataset filters allows for precise targeting of specific semantic models.
 
 ### Fallback and Diagnostics
 Scripts in `examples/` provide:
@@ -82,6 +108,76 @@ Legacy or superseded scripts are in the `archive/` directory. These are not main
 |----------------------------------------|------------------------|--------------------------------------|------------------------------------------|
 | pbi_tenant_analyzer.py                 | Service Principal      | tenant_analysis_service_principal/   | Full tenant scan, detailed metadata      |
 | list_all_semantic_models_user_auth.py  | User (Device Code)    | tenant_analysis_user_auth/           | List all accessible semantic models      |
+
+## SQLite Database Analytics
+
+Version 0.1 introduces SQLite database integration for more powerful analysis of Power BI metadata. This allows you to run complex queries, generate insights, and integrate with other tools.
+
+### Using SQLite Integration
+
+#### 1. Collecting Metadata with SQLite
+
+To save metadata to a SQLite database while scanning your tenant:
+
+```bash
+python pbi_tenant_analyzer.py --sqlite
+```
+
+Optionally specify a custom database path:
+
+```bash
+python pbi_tenant_analyzer.py --sqlite --db-path custom_path.db
+```
+
+#### 2. Analyzing Metadata with the Database Analyzer
+
+The `pbi_db_analyzer.py` script provides various commands to analyze the collected metadata:
+
+```bash
+# Show database statistics
+python pbi_db_analyzer.py stats
+
+# Show the largest datasets
+python pbi_db_analyzer.py largest
+
+# Show the most complex measures
+python pbi_db_analyzer.py complex
+
+# Search for specific metadata
+python pbi_db_analyzer.py search "sales"
+
+# Show details for a specific dataset
+python pbi_db_analyzer.py dataset <dataset_id>
+
+# Export a dataset to JSON
+python pbi_db_analyzer.py export <dataset_id> --output dataset_export.json
+```
+
+#### 3. Importing Existing JSON Metadata
+
+If you have existing JSON metadata from previous scans, you can import it into a new SQLite database:
+
+```bash
+python pbi_db_analyzer.py import --json_dir tenant_analysis_service_principal
+```
+
+### Benefits of SQLite Integration
+
+- **Structured Querying**: Use SQL to filter, aggregate, and analyze metadata
+- **Performance**: Fast queries even with large metadata collections
+- **Integration**: Connect to the database from Power BI, Python notebooks, or other tools
+- **Insights**: Discover patterns and relationships in your Power BI tenant
+
+### Integration with agentic_assistant
+
+The SQLite database and API layer are designed to be easily integrated with the [agentic_assistant](https://github.com/rbutinar/agentic_assistant) project as a plugin. This allows you to:
+
+- Query Power BI metadata using natural language
+- Generate insights and recommendations automatically
+- Combine Power BI metadata with other data sources
+- Create documentation and reports programmatically
+
+The `database/query_api.py` module provides a clean API that can be used by the agentic_assistant to access and analyze Power BI metadata.
 
 
 ## Legacy, Unfinished, or Experimental Code

@@ -13,6 +13,8 @@ import sys
 import json
 import time
 import requests
+import argparse
+import traceback
 from datetime import datetime
 from pathlib import Path
 
@@ -22,9 +24,15 @@ adomd_dir = r"C:\Program Files\Microsoft.NET\ADOMD.NET\160"
 os.environ["PATH"] += os.pathsep + adomd_dir
 sys.path.append(adomd_dir)
 
-import traceback
 from dotenv import load_dotenv
 from pyadomd import Pyadomd
+
+# Import database module (optional, only used if --db flag is provided)
+try:
+    from database import create_schema, import_from_directory
+    DATABASE_AVAILABLE = True
+except ImportError:
+    DATABASE_AVAILABLE = False
 
 # Load environment variables
 load_dotenv()
@@ -224,7 +232,7 @@ def extract_dataset_metadata(workspace_name, dataset_name):
             "error_details": traceback.format_exc()
         }
 
-def analyze_tenant():
+def analyze_tenant(use_sqlite=False, db_path=None, workspace_filter=None, workspace_id_filter=None, dataset_filter=None, dataset_id_filter=None):
     """Main function to analyze the entire tenant"""
     start_time = time.time()
     log("Starting Power BI tenant analysis...")
@@ -249,6 +257,16 @@ def analyze_tenant():
         workspace_name = workspace.get("name")
         workspace_type = workspace.get("type")
         is_on_dedicated_capacity = workspace.get("isOnDedicatedCapacity", False)
+        
+        # Apply workspace filters if specified
+        if workspace_filter and workspace_filter.lower() not in workspace_name.lower():
+            log(f"Skipping workspace (name filter): {workspace_name}")
+            continue
+            
+        if workspace_id_filter and workspace_id_filter != workspace_id:
+            log(f"Skipping workspace (ID filter): {workspace_name}")
+            continue
+        # Already extracted these values above for filtering
         
         log(f"Processing workspace: {workspace_name} (ID: {workspace_id}, Type: {workspace_type})")
         
@@ -275,6 +293,15 @@ def analyze_tenant():
             dataset_id = dataset.get("id")
             dataset_name = dataset.get("name")
             
+            # Apply dataset filters if specified
+            if dataset_filter and dataset_filter.lower() not in dataset_name.lower():
+                log(f"Skipping dataset (name filter): {dataset_name}")
+                continue
+                
+            if dataset_id_filter and dataset_id_filter != dataset_id:
+                log(f"Skipping dataset (ID filter): {dataset_name}")
+                continue
+                
             log(f"Processing dataset: {dataset_name} (ID: {dataset_id})")
             
             # Extract metadata if the dataset is on a dedicated capacity
@@ -328,6 +355,50 @@ def analyze_tenant():
     log(f"Analysis complete in {elapsed_time:.2f} seconds")
     log(f"Summary: {len(workspaces)} workspaces, {total_datasets} datasets, {datasets_with_metadata} datasets with extracted metadata")
     log(f"Results saved to {OUTPUT_DIR}")
+    
+    # Save to SQLite database if requested
+    if use_sqlite and DATABASE_AVAILABLE:
+        if db_path is None:
+            # Store database in project root by default
+            db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "pbi_metadata.db")
+        
+        log(f"Saving metadata to SQLite database: {db_path}")
+        try:
+            # Create schema if needed
+            create_schema(db_path)
+            
+            # Import JSON data
+            import_success = import_from_directory(db_path, OUTPUT_DIR, tenant_id=TENANT_ID)
+            
+            if import_success:
+                log("Successfully imported metadata to SQLite database")
+            else:
+                log("Failed to import metadata to SQLite database")
+        except Exception as e:
+            log(f"Error saving to SQLite database: {str(e)}")
+    elif use_sqlite and not DATABASE_AVAILABLE:
+        log("SQLite database integration requested but database module not available")
+        log("Please ensure the database module is installed")
+    
+    return tenant_summary
 
 if __name__ == "__main__":
-    analyze_tenant()
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description='Power BI Tenant Analyzer')
+    parser.add_argument('--sqlite', action='store_true', help='Save results to SQLite database')
+    parser.add_argument('--db-path', help='Path to SQLite database file')
+    parser.add_argument('--workspace', help='Filter analysis to workspaces containing this name (case-insensitive)')
+    parser.add_argument('--workspace-id', help='Filter analysis to a specific workspace ID')
+    parser.add_argument('--dataset', help='Filter analysis to datasets containing this name (case-insensitive)')
+    parser.add_argument('--dataset-id', help='Filter analysis to a specific dataset ID')
+    args = parser.parse_args()
+    
+    # Run the analysis
+    analyze_tenant(
+        use_sqlite=args.sqlite, 
+        db_path=args.db_path,
+        workspace_filter=args.workspace,
+        workspace_id_filter=args.workspace_id,
+        dataset_filter=args.dataset,
+        dataset_id_filter=args.dataset_id
+    )
