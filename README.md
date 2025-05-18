@@ -32,10 +32,6 @@ Python module for large-scale analysis of semantic models published on Power BI 
   TENANT_ID=your-tenant-id
   SECRET_VALUE=your-client-secret
   ```
-- For XMLA/pyadomd access, ensure the service principal is added as a member to the target workspaces
-
-- Other variables (e.g., for OpenAI) are optional unless you use those features.
-- The project uses [python-dotenv](https://pypi.org/project/python-dotenv/) to load environment variables from `.env`.
 
 ## Requirements
 - Python 3.9+
@@ -43,56 +39,62 @@ Python module for large-scale analysis of semantic models published on Power BI 
 
 ## Usage
 
-1. Configure environment variables in `.env`
-2. Install dependencies:
-   ```sh
-   pip install -r requirements.txt
-   ```
-
-### Interactive User Authentication
-```sh
-python test_powerbi_connection.py
-```
-- You will be prompted to authenticate via device code flow (open the URL and enter the code)
-- If successful, your accessible workspaces will be listed
-
-### Service Principal Authentication
-```sh
-python test_pbi_service_principal_api.py
-```
-- Uses client credentials flow with your app registration
-- Lists all workspaces accessible to the service principal
-
-### XMLA/pyadomd Connection with Service Principal
-```sh
-python test_pyadomd_service_principal.py
-```
-- Connects to a specific dataset using XMLA endpoint
-- Extracts table metadata using DMVs
-
-### Full Tenant Analysis
-```sh
+### Full Tenant Analysis (Recommended)
+Run the main analyzer with service principal authentication:
+```bash
 python pbi_tenant_analyzer.py
 ```
-- Scans all workspaces and datasets accessible to the service principal
-- Extracts detailed metadata for each dataset
-- Generates a comprehensive JSON report
+- Scans all workspaces and datasets in the tenant.
+- Extracts detailed metadata and outputs structured JSON.
 
-## Notes
+### Fallback and Diagnostics
+Scripts in `examples/` provide:
+- User authentication (device code flow) for basic listing of semantic models when app registration is not available.
+- Diagnostic scripts for REST API and XMLA connectivity.
 
-### Authentication Methods
+Example:
+```bash
+python examples/test_powerbi_connection.py
+```
 
-- **User Authentication (Interactive)**:
-  - Uses device code flow with public client ID
-  - Supports MFA
-  - Works with REST APIs but not with XMLA/pyadomd
-  - No app registration required
+### Legacy Scripts
+Legacy or superseded scripts are in the `archive/` directory. These are not maintained but available for reference.
 
-- **Service Principal Authentication (Automated)**:
-  - Uses client credentials flow with app registration
-  - Works with both REST APIs and XMLA/pyadomd
-  - Requires proper configuration in Azure AD and Power BI Admin Portal
-  - Service principal must be added as a member to workspaces for XMLA access
+## Directory Overview
+```
+|-- pbi_tenant_analyzer.py         # Main entry point (service principal, full tenant analysis)
+|-- archive/                       # Legacy, unfinished, or experimental code (not used in main workflow)
+|-- utilities/                     # Utility scripts (e.g., token analysis)
+|-- README.md, requirements.txt, .env, etc.
+```
+
+## Active Code
+
+- **pbi_tenant_analyzer.py**: Main script for tenant-wide semantic analysis using **service principal authentication** (app registration, client credentials flow). Outputs detailed metadata for all datasets in the tenant to `tenant_analysis_service_principal/`. _Recommended for automation and production._
+
+- **list_all_semantic_models_user_auth.py**: Fallback script for listing all semantic models (datasets) in the tenant using **user authentication** (device code flow). Outputs a basic listing to `tenant_analysis_user_auth/`. Use this if service principal authentication is not available. Depends on `clients/rest_client.py`.
+
+- **clients/**: Only `rest_client.py` is used for user authentication fallback. All other modules are archived.
+
+### Authentication & Output Summary
+
+| Script                                 | Authentication         | Output Directory                     | Purpose                                  |
+|----------------------------------------|------------------------|--------------------------------------|------------------------------------------|
+| pbi_tenant_analyzer.py                 | Service Principal      | tenant_analysis_service_principal/   | Full tenant scan, detailed metadata      |
+| list_all_semantic_models_user_auth.py  | User (Device Code)    | tenant_analysis_user_auth/           | List all accessible semantic models      |
+
+
+## Legacy, Unfinished, or Experimental Code
+- **archive/** contains scripts and modules that are not part of the current main workflow. These are kept for reference or possible future development, but are not maintained or recommended for use. Notable files:
+  - `analyzer.py`: Early or alternative class-based analyzer abstraction.
+  - `app.config`: Legacy or experimental configuration file (possibly for DLL or .NET integration).
+  - `langchain_wrapper.py`: Experimental LLM/LangChain integration (not part of main workflow).
+  - `config.py`, `models.py`: Configuration and data models used only by legacy or experimental code.
+  - `config/`, `config.yaml`: Project configuration directory and file, currently unused.
+  - `clients/`: REST/XMLA client modules, now archived as reference code.
+  - Other scripts that have been superseded or are unfinished.
+
+---
 
 ### XMLA/pyadomd Requirements
 

@@ -22,6 +22,11 @@ if __name__ == "__main__":
             all_models.append(model_info)
             print(f"Workspace: {ws_name} (ID: {ws_id}) -> Semantic Model: {ds.get('name')} (ID: {ds.get('id')})")
     # Optionally, save as JSON
-    with open("all_semantic_models.json", "w", encoding="utf-8") as f:
+    import os
+    from pathlib import Path
+    output_dir = "tenant_analysis_user_auth"
+    Path(output_dir).mkdir(exist_ok=True)
+    json_path = os.path.join(output_dir, "all_semantic_models.json")
+    with open(json_path, "w", encoding="utf-8") as f:
         json.dump(all_models, f, indent=2, ensure_ascii=False)
-    print(f"\nTotal semantic models found: {len(all_models)}. Full list saved to all_semantic_models.json")
+    print(f"\nTotal semantic models found: {len(all_models)}. Full list saved to {json_path}")

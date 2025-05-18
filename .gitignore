@@ -11,9 +11,6 @@ __pycache__/
 # Log files
 *.log
 
-# Local SQLite database
-data/
-
 # pyenv
 .python-version
 
@@ -26,3 +23,9 @@ data/
 
 # DLL (non versionare binari)
 *.dll
+
+tenant_analysis
+lib
+lib_archive
+tenant_analysis_service_principal/
+tenant_analysis_user_auth/
