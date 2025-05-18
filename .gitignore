@@ -20,6 +20,7 @@ __pycache__/
 
 # data
 *.json
+*.db
 
 # DLL (non versionare binari)
 *.dll
