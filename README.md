@@ -39,6 +39,8 @@ Python module for large-scale analysis of semantic models published on Power BI 
 
 ## Usage
 
+> **Note:** `add_service_principal_to_workspaces.py` is still a work in progress and may not be fully functional yet.
+
 ### Tenant Analysis
 Run the main analyzer with service principal authentication:
 

@@ -278,6 +278,31 @@ class JsonToSqliteImporter:
                     )
                 )
                 
+            # Process data sources
+            for data_source in metadata.get('data_sources', []):
+                # Skip error entries
+                if 'error' in data_source:
+                    continue
+                    
+                source_id = str(data_source.get('id', uuid.uuid4()))
+                
+                # Insert data source
+                self.cursor.execute(
+                    """
+                    INSERT OR REPLACE INTO data_sources
+                    (id, name, dataset_id, connection_string, type, impersonation_mode)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        source_id,
+                        data_source.get('name'),
+                        dataset_id,
+                        data_source.get('connection_string'),
+                        data_source.get('type'),
+                        data_source.get('impersonation_mode')
+                    )
+                )
+                
         except Exception as e:
             logger.error(f"Error processing dataset metadata {metadata_path}: {str(e)}")
 

@@ -6,6 +6,7 @@ This tool can import JSON metadata from tenant analysis and query the resulting 
 """
 import os
 import sys
+import re
 import argparse
 import logging
 from pathlib import Path
@@ -63,6 +64,7 @@ def show_stats(db_path):
     print(f"Columns: {stats['column_count']}")
     print(f"Measures: {stats['measure_count']}")
     print(f"Relationships: {stats['relationship_count']}")
+    print(f"Data Sources: {stats.get('data_source_count', 0)}")
     print(f"Last Analysis: {stats['last_analysis']}")
     print("==========================\n")
 
@@ -130,7 +132,20 @@ def search_metadata(db_path, search_term, limit=10):
         for i, m in enumerate(measures, 1):
             print(f"{i}. {m['name']} in {m['dataset_name']} ({m['workspace_name']})")
     
-    if not (datasets or tables or columns or measures):
+    # Search data sources
+    data_sources = api.search_data_sources(search_term, limit)
+    if data_sources:
+        print("\nData Sources:")
+        for i, ds in enumerate(data_sources, 1):
+            print(f"{i}. {ds.get('name', 'Unnamed Source')} in {ds['dataset_name']} ({ds['workspace_name']})")
+            if ds.get('connection_string'):
+                # Mask sensitive information in connection string
+                conn_str = ds['connection_string']
+                if 'password=' in conn_str.lower():
+                    conn_str = re.sub(r'password=.*?;', 'password=***;', conn_str, flags=re.IGNORECASE)
+                print(f"   Connection: {conn_str}")
+    
+    if not (datasets or tables or columns or measures or data_sources):
         print("No results found.")
     
     print("==========================\n")
@@ -149,6 +164,7 @@ def show_dataset_details(db_path, dataset_id):
     print(f"Dedicated Capacity: {'Yes' if dataset.get('is_on_dedicated_capacity') else 'No'}")
     print(f"Tables: {len(dataset['tables'])}")
     print(f"Measures: {len(dataset['measures'])}")
+    print(f"Data Sources: {len(dataset.get('data_sources', []))}")
     print(f"Relationships: {len(dataset['relationships'])}")
     
     # Show tables
@@ -176,17 +192,64 @@ def show_dataset_details(db_path, dataset_id):
             if rel.get('cross_filtering_behavior'):
                 print(f"   Cross-filtering: {rel['cross_filtering_behavior']}")
     
+    # Show data sources
+    if dataset.get('data_sources'):
+        print("\nData Sources:")
+        for i, src in enumerate(dataset['data_sources'], 1):
+            print(f"{i}. {src.get('name', 'Unnamed Source')} ({src.get('type', 'Unknown Type')})")
+            if src.get('connection_string'):
+                # Mask sensitive information in connection string
+                conn_str = src['connection_string']
+                if 'password=' in conn_str.lower():
+                    conn_str = re.sub(r'password=.*?;', 'password=***;', conn_str, flags=re.IGNORECASE)
+                print(f"   Connection: {conn_str}")
+    
+    print("==========================\n")
+
+def show_data_sources(db_path, dataset_id=None, limit=20):
+    """Show data sources in the database."""
+    api = PBIMetadataAPI(db_path)
+    
+    if dataset_id:
+        data_sources = api.get_data_sources(dataset_id, limit)
+        print(f"\n=== Data Sources for Dataset {dataset_id} ===")
+    else:
+        data_sources = api.get_data_sources(limit=limit)
+        print(f"\n=== Top {len(data_sources)} Data Sources ===")
+    
+    if not data_sources:
+        print("No data sources found.")
+    else:
+        for i, src in enumerate(data_sources, 1):
+            print(f"{i}. {src.get('name', 'Unnamed Source')} ({src.get('type', 'Unknown Type')})")
+            print(f"   Dataset: {src.get('dataset_name')} / Workspace: {src.get('workspace_name')}")
+            if src.get('connection_string'):
+                # Mask sensitive information in connection string
+                conn_str = src['connection_string']
+                if 'password=' in conn_str.lower():
+                    conn_str = re.sub(r'password=.*?;', 'password=***;', conn_str, flags=re.IGNORECASE)
+                print(f"   Connection: {conn_str}")
+            print()
+    
     print("==========================\n")
 
 def export_dataset(db_path, dataset_id, output_path):
-    """Export a dataset's metadata to a JSON file."""
+    """Export dataset to JSON file."""
     api = PBIMetadataAPI(db_path)
-    result = api.export_dataset_to_json(dataset_id, output_path)
     
-    if result:
-        print(f"Dataset exported to {output_path}")
+    if output_path:
+        result = api.export_dataset_to_json(dataset_id, output_path)
+        if isinstance(result, str):
+            log(f"Dataset exported to {result}")
+        else:
+            log("Failed to export dataset")
     else:
-        print(f"Failed to export dataset {dataset_id}")
+        # Print to stdout
+        result = api.export_dataset_to_json(dataset_id)
+        if isinstance(result, dict):
+            print(json.dumps(result, indent=2))
+        else:
+            log("Failed to export dataset")
 
 def find_database():
     """Find the SQLite database file in common locations."""
@@ -227,10 +290,10 @@ def main():
     import_parser.add_argument('--tenant_id', help='Tenant ID for this analysis')
     
     # Stats command
-    subparsers.add_parser('stats', help='Show database statistics')
+    stats_parser = subparsers.add_parser('stats', help='Show database statistics')
     
     # Largest datasets command
-    largest_parser = subparsers.add_parser('largest', help='Show largest datasets')
+    largest_parser = subparsers.add_parser('largest', help='Show largest datasets by table count')
     largest_parser.add_argument('--limit', type=int, default=10, help='Number of datasets to show')
     
     # Complex measures command
@@ -238,18 +301,23 @@ def main():
     complex_parser.add_argument('--limit', type=int, default=10, help='Number of measures to show')
     
     # Search command
-    search_parser = subparsers.add_parser('search', help='Search for metadata')
-    search_parser.add_argument('term', help='Search term')
+    search_parser = subparsers.add_parser('search', help='Search metadata')
+    search_parser.add_argument('--term', required=True, help='Search term')
     search_parser.add_argument('--limit', type=int, default=10, help='Number of results to show')
     
     # Dataset details command
     dataset_parser = subparsers.add_parser('dataset', help='Show dataset details')
-    dataset_parser.add_argument('id', help='Dataset ID')
+    dataset_parser.add_argument('--id', required=True, help='Dataset ID')
     
-    # Export dataset command
+    # Data sources command
+    sources_parser = subparsers.add_parser('sources', help='Show data sources')
+    sources_parser.add_argument('--dataset-id', help='Filter by dataset ID')
+    sources_parser.add_argument('--limit', type=int, default=20, help='Number of sources to show')
+    
+    # Export command
     export_parser = subparsers.add_parser('export', help='Export dataset to JSON')
-    export_parser.add_argument('id', help='Dataset ID')
-    export_parser.add_argument('--output', required=True, help='Output file path')
+    export_parser.add_argument('--id', required=True, help='Dataset ID')
+    export_parser.add_argument('--output', help='Output file path')
     
     args = parser.parse_args()
     
@@ -275,6 +343,8 @@ def main():
         search_metadata(args.db, args.term, args.limit)
     elif args.command == 'dataset':
         show_dataset_details(args.db, args.id)
+    elif args.command == 'sources':
+        show_data_sources(args.db, args.dataset_id, args.limit)
     elif args.command == 'export':
         export_dataset(args.db, args.id, args.output)
 

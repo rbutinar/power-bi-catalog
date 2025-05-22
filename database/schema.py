@@ -109,6 +109,20 @@ def create_schema(db_path):
     )
     ''')
     
+    # Data Sources table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS data_sources (
+        id TEXT PRIMARY KEY,
+        name TEXT,
+        dataset_id TEXT NOT NULL,
+        connection_string TEXT,
+        type TEXT,
+        impersonation_mode TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (dataset_id) REFERENCES datasets(id)
+    )
+    ''')
+    
     # Analysis runs table to track when analyses were performed
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS analysis_runs (
@@ -133,6 +147,7 @@ def create_schema(db_path):
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_columns_table ON columns(table_id)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_measures_dataset ON measures(dataset_id)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_relationships_dataset ON relationships(dataset_id)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_data_sources_dataset ON data_sources(dataset_id)')
     
     conn.commit()
     conn.close()

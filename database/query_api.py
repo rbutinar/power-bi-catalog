@@ -190,6 +190,14 @@ class PBIMetadataAPI:
         """
         result['relationships'] = self._execute_query(query, (dataset_id,))
         
+        # Get data sources
+        query = """
+        SELECT id, name, connection_string, type, impersonation_mode
+        FROM data_sources
+        WHERE dataset_id = ?
+        """
+        result['data_sources'] = self._execute_query(query, (dataset_id,))
+        
         # For each table, get its columns
         for table in result['tables']:
             query = """
@@ -339,6 +347,65 @@ class PBIMetadataAPI:
         """
         search_pattern = f"%{search_term}%"
         return self._execute_query(query, (search_pattern, search_pattern, limit))
+        
+    def search_data_sources(self, search_term: str, limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Search for data sources by name or connection string.
+        
+        Args:
+            search_term (str): Search term
+            limit (int): Maximum number of data sources to return
+            
+        Returns:
+            List[Dict[str, Any]]: Matching data sources
+        """
+        query = """
+        SELECT ds.id, ds.name, ds.connection_string, ds.type, 
+               d.name as dataset_name, w.name as workspace_name
+        FROM data_sources ds
+        JOIN datasets d ON ds.dataset_id = d.id
+        JOIN workspaces w ON d.workspace_id = w.id
+        WHERE ds.name LIKE ? OR ds.connection_string LIKE ?
+        ORDER BY ds.name
+        LIMIT ?
+        """
+        search_pattern = f"%{search_term}%"
+        return self._execute_query(query, (search_pattern, search_pattern, limit))
+        
+    def get_data_sources(self, dataset_id: Optional[str] = None, limit: int = 100) -> List[Dict[str, Any]]:
+        """
+        Get data sources.
+        
+        Args:
+            dataset_id (str, optional): Filter by dataset ID
+            limit (int): Maximum number of data sources to return
+            
+        Returns:
+            List[Dict[str, Any]]: Data sources
+        """
+        if dataset_id:
+            query = """
+            SELECT ds.id, ds.name, ds.connection_string, ds.type, ds.impersonation_mode,
+                   d.name as dataset_name, w.name as workspace_name
+            FROM data_sources ds
+            JOIN datasets d ON ds.dataset_id = d.id
+            JOIN workspaces w ON d.workspace_id = w.id
+            WHERE ds.dataset_id = ?
+            ORDER BY ds.name
+            LIMIT ?
+            """
+            return self._execute_query(query, (dataset_id, limit))
+        else:
+            query = """
+            SELECT ds.id, ds.name, ds.connection_string, ds.type, ds.impersonation_mode,
+                   d.name as dataset_name, w.name as workspace_name
+            FROM data_sources ds
+            JOIN datasets d ON ds.dataset_id = d.id
+            JOIN workspaces w ON d.workspace_id = w.id
+            ORDER BY ds.name
+            LIMIT ?
+            """
+            return self._execute_query(query, (limit,))
     
     def execute_custom_query(self, query: str, params: tuple = ()) -> List[Dict[str, Any]]:
         """
@@ -355,42 +422,19 @@ class PBIMetadataAPI:
     
     def get_database_stats(self) -> Dict[str, Any]:
         """
-        Get statistics about the database.
+        Get overall database statistics.
         
         Returns:
             Dict[str, Any]: Database statistics
         """
-        stats = {}
-        
-        # Count workspaces
-        query = "SELECT COUNT(*) as count FROM workspaces"
-        result = self._execute_query(query)
-        stats['workspace_count'] = result[0]['count'] if result else 0
-        
-        # Count datasets
-        query = "SELECT COUNT(*) as count FROM datasets"
-        result = self._execute_query(query)
-        stats['dataset_count'] = result[0]['count'] if result else 0
-        
-        # Count tables
-        query = "SELECT COUNT(*) as count FROM tables"
-        result = self._execute_query(query)
-        stats['table_count'] = result[0]['count'] if result else 0
-        
-        # Count columns
-        query = "SELECT COUNT(*) as count FROM columns"
-        result = self._execute_query(query)
-        stats['column_count'] = result[0]['count'] if result else 0
-        
-        # Count measures
-        query = "SELECT COUNT(*) as count FROM measures"
-        result = self._execute_query(query)
-        stats['measure_count'] = result[0]['count'] if result else 0
-        
-        # Count relationships
-        query = "SELECT COUNT(*) as count FROM relationships"
-        result = self._execute_query(query)
-        stats['relationship_count'] = result[0]['count'] if result else 0
+        # Get counts for each entity type
+        workspace_count = self._get_count("workspaces")
+        dataset_count = self._get_count("datasets")
+        table_count = self._get_count("tables")
+        column_count = self._get_count("columns")
+        measure_count = self._get_count("measures")
+        relationship_count = self._get_count("relationships")
+        data_source_count = self._get_count("data_sources")
         
         # Get last analysis run
         query = """
@@ -398,9 +442,32 @@ class PBIMetadataAPI:
         ORDER BY run_date DESC LIMIT 1
         """
         result = self._execute_query(query)
-        stats['last_analysis'] = result[0]['run_date'] if result else None
+        last_analysis = result[0]['run_date'] if result else None
         
-        return stats
+        return {
+            "workspace_count": workspace_count,
+            "dataset_count": dataset_count,
+            "table_count": table_count,
+            "column_count": column_count,
+            "measure_count": measure_count,
+            "relationship_count": relationship_count,
+            "data_source_count": data_source_count,
+            "last_analysis": last_analysis
+        }
+    
+    def _get_count(self, table_name: str) -> int:
+        """
+        Get the count of rows in a table.
+        
+        Args:
+            table_name (str): Name of the table
+            
+        Returns:
+            int: Row count
+        """
+        query = f"SELECT COUNT(*) as count FROM {table_name}"
+        result = self._execute_query(query)
+        return result[0]['count'] if result else 0
     
     def export_dataset_to_json(self, dataset_id: str, output_path: Optional[str] = None) -> Union[Dict[str, Any], str]:
         """
@@ -456,6 +523,7 @@ if __name__ == "__main__":
         print(f"Columns: {stats['column_count']}")
         print(f"Measures: {stats['measure_count']}")
         print(f"Relationships: {stats['relationship_count']}")
+        print(f"Data Sources: {stats['data_source_count']}")
         print(f"Last Analysis: {stats['last_analysis']}")
     
     if args.largest:

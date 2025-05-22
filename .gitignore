@@ -21,6 +21,8 @@ __pycache__/
 # data
 *.json
 *.db
+*.pbix
+.vscode
 
 # DLL (non versionare binari)
 *.dll
