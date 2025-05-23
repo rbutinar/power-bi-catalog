@@ -98,7 +98,15 @@ def get_datasets_in_workspace(token, workspace_id):
         log(f"Error fetching datasets for workspace {workspace_id}: {str(e)}")
         return []
 
-def extract_dataset_metadata(workspace_name, dataset_name):
+def get_datasources_in_dataset(token, workspace_id, dataset_id):
+    """Get datasources for a dataset using the REST API"""
+    url = f"https://api.powerbi.com/v1.0/myorg/groups/{workspace_id}/datasets/{dataset_id}/datasources"
+    headers = {"Authorization": f"Bearer {token}"}
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    return response.json()["value"]
+
+def extract_dataset_metadata(workspace_name, dataset_name, token=None, workspace_id=None, dataset_id=None):
     """Extract detailed metadata for a dataset using XMLA/pyadomd"""
     log(f"Extracting metadata for dataset '{dataset_name}' in workspace '{workspace_name}'...")
     
@@ -120,8 +128,19 @@ def extract_dataset_metadata(workspace_name, dataset_name):
         "tables": [],
         "measures": [],
         "relationships": [],
-        "data_sources": []
+        "data_sources": [],
+        "rest_api_datasources": []
     }
+    
+    # Add REST API datasources if available
+    if token and workspace_id and dataset_id:
+        try:
+            rest_datasources = get_datasources_in_dataset(token, workspace_id, dataset_id)
+            dataset_metadata["rest_api_datasources"] = rest_datasources
+            log(f"Added {len(rest_datasources)} REST API datasources to metadata")
+        except Exception as e:
+            log(f"Warning: Could not retrieve REST API datasources: {str(e)}")
+            dataset_metadata["rest_api_datasources"] = [{"error": f"Could not retrieve REST API datasources: {str(e)}"}]  
     
     try:
         with Pyadomd(connection_str) as conn:
@@ -313,8 +332,8 @@ def analyze_tenant(use_sqlite=False, db_path=None, workspace_filter=None, worksp
             
             if is_on_dedicated_capacity:
                 try:
-                    # Extract detailed metadata
-                    metadata = extract_dataset_metadata(workspace_name, dataset_name)
+                    # Extract detailed metadata (including REST API datasources)
+                    metadata = extract_dataset_metadata(workspace_name, dataset_name, token, workspace_id, dataset_id)
                     
                     # Save dataset metadata to file
                     safe_name = f"{workspace_name}_{dataset_name}".replace(" ", "_").replace("/", "_")
@@ -336,6 +355,7 @@ def analyze_tenant(use_sqlite=False, db_path=None, workspace_filter=None, worksp
                 dataset_info["reason"] = "Workspace not on dedicated capacity"
             
             workspace_summary["datasets"].append(dataset_info)
+
         
         tenant_summary["workspaces"].append(workspace_summary)
     

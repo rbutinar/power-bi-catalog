@@ -6,7 +6,6 @@ Script to add a service principal with contributor role to multiple Power BI wor
 import os
 import sys
 import time
-import json
 import logging
 import argparse
 from datetime import datetime
@@ -237,8 +236,7 @@ def main():
     parser = argparse.ArgumentParser(description='Add service principal to Power BI workspaces')
     
     # Service principal ID (required unless verify-only)
-    parser.add_argument('--service-principal-id', 
-                        help='Object ID of the service principal in Azure AD')
+    parser.add_argument('--service-principal-id', help='Object ID of the service principal (from Azure AD). If not provided, will use OBJECT_ID from .env')
     
     # Filters
     parser.add_argument('--workspace', help='Filter by workspace name (case-insensitive partial match)')
@@ -270,9 +268,14 @@ def main():
     
     args = parser.parse_args()
     
-    # Validate args
-    if not (args.verify_only or args.list_accessible) and not args.service_principal_id:
-        parser.error("--service-principal-id is required unless --verify-only or --list-accessible is specified")
+    # If service_principal_id is not provided, try to load from environment
+    if not (args.verify_only or args.list_accessible):
+        if not args.service_principal_id:
+            env_object_id = os.getenv('OBJECT_ID')
+            if env_object_id:
+                args.service_principal_id = env_object_id
+            else:
+                parser.error("--service-principal-id not provided and OBJECT_ID not set in .env. Please provide one.")
     
     # Get access token
     token = get_access_token()
