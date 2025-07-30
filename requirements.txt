@@ -3,5 +3,8 @@ requests
 pyadomd
 pydantic
 langchain
-dotenv
+python-dotenv
 pyyaml
+fastapi
+uvicorn
+python-multipart
