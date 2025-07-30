@@ -5,13 +5,30 @@ import os
 import sqlite3
 from typing import Optional, Dict, Any, List
 from datetime import datetime
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
+import asyncio
+
+# Import scan manager
+import sys
+import os
+# Add parent directory to path for scan_manager import
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
+from scan_manager import scan_manager, ScanStatus
 
 # Load environment variables
-load_dotenv()
+# Get the parent directory (project root) to find .env file
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+env_path = os.path.join(project_root, '.env')
+load_dotenv(env_path)
+
+# Check if scan manager is available
+SCAN_MANAGER_AVAILABLE = True
 
 app = FastAPI(
     title="Power BI Catalog API",
@@ -94,11 +111,46 @@ class AnalysisStats(BaseModel):
     total_relationships: int = 0
     workspaces_on_dedicated: int = 0
 
+# Scan-related models
+class ScanRequest(BaseModel):
+    scan_name: Optional[str] = None
+    description: Optional[str] = None
+    workspace_filter: Optional[str] = None
+    workspace_id_filter: Optional[str] = None
+    dataset_filter: Optional[str] = None
+    dataset_id_filter: Optional[str] = None
+
+class ScanResponse(BaseModel):
+    scan_id: str
+    scan_name: str
+    description: str
+    status: str
+    progress: int
+    created_at: str
+    completed_at: Optional[str] = None
+    error_message: Optional[str] = None
+    total_workspaces: int = 0
+    processed_workspaces: int = 0
+    total_datasets: int = 0
+    processed_datasets: int = 0
+
+class ScanListResponse(BaseModel):
+    scans: List[ScanResponse]
+
 # Database connection helper
-def get_db_connection():
-    db_path = "pbi_metadata.db"
-    if not os.path.exists(db_path):
-        raise HTTPException(status_code=404, detail="Database not found. Please run a Power BI scan first.")
+def get_db_connection(scan_id: Optional[str] = None):
+    """Get database connection for a specific scan or default database"""
+    if scan_id:
+        # Get scan-specific database
+        db_path = scan_manager.get_scan_database(scan_id)
+        if not db_path:
+            raise HTTPException(status_code=404, detail=f"Database not found for scan {scan_id}")
+    else:
+        # Use default database
+        db_path = "pbi_metadata.db"
+        if not os.path.exists(db_path):
+            raise HTTPException(status_code=404, detail="Database not found. Please run a Power BI scan first.")
+    
     return sqlite3.connect(db_path)
 
 @app.get("/")
@@ -109,7 +161,16 @@ async def root():
 @app.get("/api/test")
 async def test_endpoint():
     """Simple test endpoint"""
-    return {"message": "API is working", "endpoint": "test"}
+    return {"message": "API is working", "endpoint": "test", "timestamp": "updated"}
+
+@app.get("/api/scans-test")
+async def test_scans_endpoint():
+    """Test scan endpoint without dependencies"""
+    try:
+        scans = scan_manager.list_scans()
+        return {"message": "Scan endpoint is working", "available": SCAN_MANAGER_AVAILABLE, "scans_count": len(scans)}
+    except Exception as e:
+        return {"message": "Scan endpoint error", "error": str(e), "available": SCAN_MANAGER_AVAILABLE}
 
 @app.get("/api/datasets/test-id/details")
 async def test_dataset_details():
@@ -122,19 +183,33 @@ async def get_config():
     Get tenant configuration from environment variables.
     Returns configuration without exposing the client secret.
     """
+    print("=== /api/config endpoint called ===")
+    
     tenant_id = os.getenv("TENANT_ID")
     client_id = os.getenv("CLIENT_ID") 
     client_secret = os.getenv("SECRET_VALUE")
     
+    # Debug logging
+    print(f"DEBUG: TENANT_ID = {tenant_id}")
+    print(f"DEBUG: CLIENT_ID = {client_id}")
+    print(f"DEBUG: SECRET_VALUE = {'***' if client_secret else None}")
+    print(f"DEBUG: .env file path = {env_path}")
+    print(f"DEBUG: .env file exists = {os.path.exists(env_path)}")
+    
     # Check if configuration is complete
     is_configured = all([tenant_id, client_id, client_secret])
     
-    return TenantConfigResponse(
+    response = TenantConfigResponse(
         tenant_id=tenant_id,
         client_id=client_id,
         has_client_secret=bool(client_secret),
         is_configured=is_configured
     )
+    
+    print(f"DEBUG: Returning response = {response}")
+    print("=== End /api/config ===")
+    
+    return response
 
 @app.post("/api/config")
 async def update_config(config: TenantConfig):
@@ -240,10 +315,11 @@ async def get_workspaces_new(limit: int = Query(100, ge=1, le=1000)):
 @app.get("/api/datasets/list", response_model=List[Dataset])
 async def get_datasets_new(
     workspace_id: Optional[str] = Query(None),
-    limit: int = Query(100, ge=1, le=1000)
+    limit: int = Query(100, ge=1, le=1000),
+    scan_id: Optional[str] = Query(None, description="Scan ID to get data from")
 ):
     """Get datasets with workspace info and counts"""
-    conn = get_db_connection()
+    conn = get_db_connection(scan_id)
     cursor = conn.cursor()
     
     try:
@@ -514,6 +590,93 @@ async def search(
         return results
     finally:
         conn.close()
+
+# Scanning API endpoints
+@app.post("/api/scans", response_model=ScanResponse)
+async def create_scan(scan_request: ScanRequest, background_tasks: BackgroundTasks):
+    """Create and start a new Power BI scan"""
+    try:
+        # Create the scan
+        scan_id = scan_manager.create_scan(
+            scan_name=scan_request.scan_name,
+            description=scan_request.description
+        )
+        
+        # Start scanning in background
+        background_tasks.add_task(
+            run_scan_background,
+            scan_id,
+            scan_request.workspace_filter,
+            scan_request.workspace_id_filter,
+            scan_request.dataset_filter,
+            scan_request.dataset_id_filter
+        )
+        
+        # Return initial scan info
+        scan_info = scan_manager.get_scan(scan_id)
+        return ScanResponse(**scan_info)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create scan: {str(e)}")
+
+@app.get("/api/scans", response_model=ScanListResponse)
+async def list_scans():
+    """List all available scans"""
+    try:
+        scans = scan_manager.list_scans()
+        scan_responses = [ScanResponse(**scan) for scan in scans]
+        return ScanListResponse(scans=scan_responses)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to list scans: {str(e)}")
+
+@app.get("/api/scans/{scan_id}", response_model=ScanResponse)
+async def get_scan(scan_id: str):
+    """Get details of a specific scan"""
+    scan_info = scan_manager.get_scan(scan_id)
+    if not scan_info:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    return ScanResponse(**scan_info)
+
+@app.delete("/api/scans/{scan_id}")
+async def delete_scan(scan_id: str):
+    """Delete a scan and all its data"""
+    success = scan_manager.delete_scan(scan_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    return {"message": f"Scan {scan_id} deleted successfully"}
+
+@app.post("/api/scans/{scan_id}/cancel")
+async def cancel_scan(scan_id: str):
+    """Cancel a running scan"""
+    scan_info = scan_manager.get_scan(scan_id)
+    if not scan_info:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    
+    if scan_info["status"] not in [ScanStatus.PENDING.value, ScanStatus.RUNNING.value]:
+        raise HTTPException(status_code=400, detail="Scan cannot be cancelled")
+    
+    scan_manager.update_scan_status(scan_id, ScanStatus.CANCELLED, message="Scan cancelled by user")
+    return {"message": f"Scan {scan_id} cancelled"}
+
+
+async def run_scan_background(scan_id: str, workspace_filter: Optional[str] = None,
+                             workspace_id_filter: Optional[str] = None,
+                             dataset_filter: Optional[str] = None,
+                             dataset_id_filter: Optional[str] = None):
+    """Background task to run the scan"""
+    try:
+        await scan_manager.start_scan(
+            scan_id=scan_id,
+            workspace_filter=workspace_filter,
+            workspace_id_filter=workspace_id_filter,
+            dataset_filter=dataset_filter,
+            dataset_id_filter=dataset_id_filter
+        )
+    except Exception as e:
+        scan_manager.update_scan_status(
+            scan_id, ScanStatus.FAILED, 
+            error=f"Background scan failed: {str(e)}"
+        )
 
 if __name__ == "__main__":
     import uvicorn

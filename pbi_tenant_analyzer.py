@@ -41,7 +41,7 @@ load_dotenv()
 CLIENT_ID = os.environ["CLIENT_ID"]
 CLIENT_SECRET = os.environ["SECRET_VALUE"]
 TENANT_ID = os.environ["TENANT_ID"]
-OUTPUT_DIR = "tenant_analysis_service_principal"
+OUTPUT_DIR = os.environ.get("OUTPUT_DIR", "tenant_analysis_service_principal")
 
 # Create output directory if it doesn't exist
 Path(OUTPUT_DIR).mkdir(exist_ok=True)

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ApiService, SearchResults, Workspace, Dataset, Table } from '../services/api';
 import DatasetDetail from './DatasetDetail';
+import ScanManager from './ScanManager';
 import './DataCatalog.css';
 
 interface DataCatalogProps {
@@ -21,19 +22,23 @@ const DataCatalog: React.FC<DataCatalogProps> = ({ isConfigured }) => {
   const [dataLoading, setDataLoading] = useState(false);
   const [viewMode, setViewMode] = useState<'catalog' | 'dataset-detail'>('catalog');
   const [detailDatasetId, setDetailDatasetId] = useState<string>('');
+  const [showScanManager, setShowScanManager] = useState(false);
+  const [selectedScanId, setSelectedScanId] = useState<string>('');
 
   useEffect(() => {
     if (isConfigured) {
       loadInitialData();
     }
-  }, [isConfigured]);
+  }, [isConfigured, selectedScanId]);
 
   const loadInitialData = async () => {
     setDataLoading(true);
     try {
       const [workspacesData, datasetsData] = await Promise.all([
         ApiService.getWorkspaces(100),
-        ApiService.getDatasets(undefined, 100)
+        selectedScanId ? 
+          ApiService.getDatasetsFromScan(selectedScanId, undefined, 100) :
+          ApiService.getDatasets(undefined, 100)
       ]);
       setWorkspaces(workspacesData);
       setDatasets(datasetsData);
@@ -71,7 +76,9 @@ const DataCatalog: React.FC<DataCatalogProps> = ({ isConfigured }) => {
     setShowTables(false);
     
     try {
-      const workspaceDatasets = await ApiService.getDatasets(workspaceId, 100);
+      const workspaceDatasets = selectedScanId ?
+        await ApiService.getDatasetsFromScan(selectedScanId, workspaceId, 100) :
+        await ApiService.getDatasets(workspaceId, 100);
       setDatasets(workspaceDatasets);
     } catch (error) {
       console.error('Failed to load workspace datasets:', error);
@@ -125,6 +132,20 @@ const DataCatalog: React.FC<DataCatalogProps> = ({ isConfigured }) => {
     }
   };
 
+  const handleScanSelected = (scanId: string) => {
+    setSelectedScanId(scanId);
+    setShowScanManager(false);
+    // Clear current filters and reload data from selected scan
+    setSelectedWorkspace('');
+    setSelectedDataset('');
+    setDatasetTables([]);
+    setShowTables(false);
+    setSearchQuery('');
+    setSearchResults(null);
+    // Trigger reload with new scan
+    setTimeout(() => loadInitialData(), 100);
+  };
+
   const clearFilters = () => {
     setSelectedWorkspace('');
     setSelectedDataset('');
@@ -153,8 +174,32 @@ const DataCatalog: React.FC<DataCatalogProps> = ({ isConfigured }) => {
   return (
     <div className="catalog-container">
       <div className="catalog-header">
-        <h1>Data Catalog</h1>
-        <p>Browse and discover your Power BI assets</p>
+        <div className="header-content">
+          <div className="header-text">
+            <h1>Data Catalog</h1>
+            <p>Browse and discover your Power BI assets</p>
+          </div>
+          <div className="header-actions">
+            <button 
+              onClick={() => setShowScanManager(true)} 
+              className="scan-manager-button"
+            >
+              📊 Manage Scans
+            </button>
+            {selectedScanId && (
+              <div className="selected-scan-info">
+                <span className="scan-indicator">📊 Using scan data</span>
+                <button 
+                  onClick={() => setSelectedScanId('')} 
+                  className="clear-scan-button"
+                  title="Switch back to default data"
+                >
+                  ×
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="catalog-search">
@@ -351,6 +396,13 @@ const DataCatalog: React.FC<DataCatalogProps> = ({ isConfigured }) => {
           </div>
         </div>
       </div>
+
+      {showScanManager && (
+        <ScanManager 
+          onClose={() => setShowScanManager(false)}
+          onScanSelected={handleScanSelected}
+        />
+      )}
     </div>
   );
 };

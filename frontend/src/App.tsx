@@ -32,10 +32,13 @@ function App() {
     setApiError(null)
     
     try {
+      console.log('🔄 Loading configuration from backend...')
       // First try to get config from backend (.env file)
       const backendConfig = await ApiService.getConfig()
+      console.log('✅ Backend config received:', backendConfig)
       
       if (backendConfig.is_configured) {
+        console.log('✅ Configuration is complete, setting up...')
         // Backend has configuration, use it
         const config: TenantConfig = {
           tenantId: backendConfig.tenant_id || '',

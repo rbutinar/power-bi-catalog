@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:8001';
+const API_BASE_URL = 'http://localhost:8000';
 
 export interface TenantConfig {
   tenant_id: string;
@@ -110,6 +110,35 @@ export interface Column {
   table_name: string;
 }
 
+// Scan-related interfaces
+export interface ScanRequest {
+  scan_name?: string;
+  description?: string;
+  workspace_filter?: string;
+  workspace_id_filter?: string;
+  dataset_filter?: string;
+  dataset_id_filter?: string;
+}
+
+export interface ScanResponse {
+  scan_id: string;
+  scan_name: string;
+  description: string;
+  status: string;
+  progress: number;
+  created_at: string;
+  completed_at?: string;
+  error_message?: string;
+  total_workspaces: number;
+  processed_workspaces: number;
+  total_datasets: number;
+  processed_datasets: number;
+}
+
+export interface ScanListResponse {
+  scans: ScanResponse[];
+}
+
 export class ApiService {
   private static async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
@@ -211,5 +240,45 @@ export class ApiService {
   static async testDatasetDetails(): Promise<any> {
     console.log('Testing dataset details endpoint...');
     return this.request<any>('/api/datasets/test-id/details');
+  }
+
+  // Scanning API methods
+  static async createScan(scanRequest: ScanRequest): Promise<ScanResponse> {
+    return this.request<ScanResponse>('/api/scans', {
+      method: 'POST',
+      body: JSON.stringify(scanRequest),
+    });
+  }
+
+  static async listScans(): Promise<ScanListResponse> {
+    return this.request<ScanListResponse>('/api/scans');
+  }
+
+  static async getScan(scanId: string): Promise<ScanResponse> {
+    return this.request<ScanResponse>(`/api/scans/${scanId}`);
+  }
+
+  static async deleteScan(scanId: string): Promise<{ message: string }> {
+    return this.request(`/api/scans/${scanId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  static async cancelScan(scanId: string): Promise<{ message: string }> {
+    return this.request(`/api/scans/${scanId}/cancel`, {
+      method: 'POST',
+    });
+  }
+
+  // Updated methods to support scan selection
+  static async getDatasetsFromScan(scanId?: string, workspaceId?: string, limit: number = 100): Promise<Dataset[]> {
+    const query = new URLSearchParams({ limit: limit.toString() });
+    if (workspaceId) {
+      query.append('workspace_id', workspaceId);
+    }
+    if (scanId) {
+      query.append('scan_id', scanId);
+    }
+    return this.request<Dataset[]>(`/api/datasets/list?${query.toString()}`);
   }
 }
