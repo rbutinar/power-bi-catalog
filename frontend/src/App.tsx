@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import Sidebar from './components/Sidebar'
 import ConfigurationForm from './components/ConfigurationForm'
-import { ApiService, TenantConfigResponse } from './services/api'
+import { ApiService, TenantConfigResponse, AnalysisStats, Workspace, Dataset } from './services/api'
 import './App.css'
 
 interface TenantConfig {
@@ -16,6 +16,10 @@ function App() {
   const [isConfigured, setIsConfigured] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [apiError, setApiError] = useState<string | null>(null)
+  const [stats, setStats] = useState<AnalysisStats | null>(null)
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([])
+  const [datasets, setDatasets] = useState<Dataset[]>([])
+  const [dataLoading, setDataLoading] = useState(false)
 
   // Check configuration from backend and localStorage on app load
   useEffect(() => {
@@ -40,6 +44,8 @@ function App() {
         setTenantConfig(config)
         setIsConfigured(true)
         setCurrentPage('dashboard')
+        // Load data after setting configuration
+        setTimeout(() => loadData(), 100)
       } else {
         // Try localStorage as fallback
         const savedConfig = localStorage.getItem('tenantConfig')
@@ -76,6 +82,28 @@ function App() {
     setTenantConfig(config)
     setIsConfigured(true)
     setCurrentPage('dashboard')
+    loadData() // Load data after configuration
+  }
+
+  const loadData = async () => {
+    if (!isConfigured) return
+    
+    setDataLoading(true)
+    try {
+      const [statsData, workspacesData, datasetsData] = await Promise.all([
+        ApiService.getStats(),
+        ApiService.getWorkspaces(50),
+        ApiService.getDatasets(undefined, 50)
+      ])
+      
+      setStats(statsData)
+      setWorkspaces(workspacesData)
+      setDatasets(datasetsData)
+    } catch (error) {
+      console.error('Failed to load data:', error)
+    } finally {
+      setDataLoading(false)
+    }
   }
 
   const renderMainContent = () => {
@@ -125,18 +153,59 @@ function App() {
                     <p>{apiError}</p>
                   </div>
                 )}
+                
                 <div className="status-card">
                   <h3>Tenant Configuration</h3>
                   <p>✅ Connected to tenant: {tenantConfig?.tenantId}</p>
                   <p>Client ID: {tenantConfig?.clientId}</p>
                   <p>Configuration source: {apiError ? 'Local Storage' : 'Environment File'}</p>
                 </div>
-                <div className="status-card">
-                  <h3>Next Steps</h3>
-                  <p>• Scan your Power BI tenant for assets</p>
-                  <p>• Browse the data catalog</p>
-                  <p>• Search for datasets and reports</p>
-                </div>
+
+                {dataLoading ? (
+                  <div className="status-card">
+                    <h3>Loading Data...</h3>
+                    <div className="loading-spinner"></div>
+                  </div>
+                ) : stats ? (
+                  <>
+                    <div className="status-card">
+                      <h3>📊 Analysis Overview</h3>
+                      <p>Last scan: {stats.latest_run_date ? new Date(stats.latest_run_date).toLocaleDateString() : 'No data'}</p>
+                      <p>Total workspaces: <strong>{stats.total_workspaces}</strong></p>
+                      <p>Total datasets: <strong>{stats.total_datasets}</strong></p>
+                      <p>Total tables: <strong>{stats.total_tables}</strong></p>
+                      <p>Total columns: <strong>{stats.total_columns}</strong></p>
+                      <p>Total measures: <strong>{stats.total_measures}</strong></p>
+                    </div>
+
+                    <div className="status-card">
+                      <h3>🏢 Top Workspaces</h3>
+                      {workspaces.slice(0, 5).map(ws => (
+                        <p key={ws.id}>
+                          <strong>{ws.name}</strong> ({ws.datasets_count} datasets)
+                          {ws.is_on_dedicated_capacity && <span className="capacity-badge">Premium</span>}
+                        </p>
+                      ))}
+                    </div>
+
+                    <div className="status-card">
+                      <h3>📋 Recent Datasets</h3>
+                      {datasets.slice(0, 5).map(ds => (
+                        <p key={ds.id}>
+                          <strong>{ds.name}</strong> in {ds.workspace_name}
+                          <br />
+                          <small>{ds.tables_count} tables, {ds.measures_count} measures</small>
+                        </p>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="status-card">
+                    <h3>No Data Available</h3>
+                    <p>No Power BI scan data found. Please run a tenant scan first.</p>
+                    <button className="btn-primary" onClick={loadData}>Retry Loading</button>
+                  </div>
+                )}
               </div>
             )}
           </div>

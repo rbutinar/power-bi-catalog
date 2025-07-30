@@ -128,6 +128,21 @@
   background: #fff8e1;
 }
 
+.capacity-badge {
+  background: #4caf50;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  margin-left: 0.5rem;
+  font-weight: 500;
+}
+
+.status-card small {
+  color: #888;
+  font-size: 0.8rem;
+}
+
 .status-card h3 {
   color: #333;
   margin-bottom: 1rem;

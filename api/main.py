@@ -2,8 +2,10 @@
 FastAPI backend for Power BI Catalog
 """
 import os
-from typing import Optional, Dict, Any
-from fastapi import FastAPI, HTTPException
+import sqlite3
+from typing import Optional, Dict, Any, List
+from datetime import datetime
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -36,6 +38,68 @@ class TenantConfigResponse(BaseModel):
     client_id: Optional[str] = None
     has_client_secret: bool = False
     is_configured: bool = False
+
+# Data models for Power BI entities
+class Workspace(BaseModel):
+    id: str
+    name: str
+    type: Optional[str] = None
+    is_on_dedicated_capacity: Optional[bool] = None
+    datasets_count: Optional[int] = 0
+
+class Dataset(BaseModel):
+    id: str
+    name: str
+    workspace_id: str
+    workspace_name: Optional[str] = None
+    created_date: Optional[str] = None
+    modified_date: Optional[str] = None
+    tables_count: Optional[int] = 0
+    measures_count: Optional[int] = 0
+
+class Table(BaseModel):
+    id: str
+    name: str
+    dataset_id: str
+    dataset_name: Optional[str] = None
+    row_count: Optional[int] = None
+    columns_count: Optional[int] = 0
+
+class Column(BaseModel):
+    id: str
+    name: str
+    table_id: str
+    table_name: Optional[str] = None
+    data_type: Optional[str] = None
+    description: Optional[str] = None
+    is_hidden: Optional[bool] = None
+    is_key: Optional[bool] = None
+
+class Measure(BaseModel):
+    id: str
+    name: str
+    dataset_id: str
+    table_id: Optional[str] = None
+    expression: Optional[str] = None
+    description: Optional[str] = None
+    is_hidden: Optional[bool] = None
+
+class AnalysisStats(BaseModel):
+    latest_run_date: Optional[str] = None
+    total_workspaces: int = 0
+    total_datasets: int = 0
+    total_tables: int = 0
+    total_columns: int = 0
+    total_measures: int = 0
+    total_relationships: int = 0
+    workspaces_on_dedicated: int = 0
+
+# Database connection helper
+def get_db_connection():
+    db_path = "pbi_metadata.db"
+    if not os.path.exists(db_path):
+        raise HTTPException(status_code=404, detail="Database not found. Please run a Power BI scan first.")
+    return sqlite3.connect(db_path)
 
 @app.get("/")
 async def root():
@@ -82,45 +146,230 @@ async def update_config(config: TenantConfig):
         "is_configured": True
     }
 
+# Legacy endpoints redirected to new implementations
 @app.get("/api/workspaces")
-async def get_workspaces():
-    """
-    Get Power BI workspaces.
-    TODO: Implement actual Power BI API integration
-    """
-    # Check if configured
-    config_response = await get_config()
-    if not config_response.is_configured:
-        raise HTTPException(
-            status_code=400,
-            detail="Power BI tenant not configured. Please configure your credentials first."
-        )
-    
-    # Placeholder response
-    return {
-        "workspaces": [],
-        "message": "Power BI API integration coming soon"
-    }
+async def get_workspaces_legacy():
+    """Legacy workspaces endpoint"""
+    workspaces = await get_workspaces_new()
+    return {"workspaces": workspaces, "message": "Data loaded from SQLite"}
 
-@app.get("/api/datasets")
-async def get_datasets():
-    """
-    Get Power BI datasets.
-    TODO: Implement actual Power BI API integration
-    """
-    # Check if configured
-    config_response = await get_config()
-    if not config_response.is_configured:
-        raise HTTPException(
-            status_code=400,
-            detail="Power BI tenant not configured. Please configure your credentials first."
-        )
+@app.get("/api/datasets") 
+async def get_datasets_legacy():
+    """Legacy datasets endpoint"""
+    datasets = await get_datasets_new()
+    return {"datasets": datasets, "message": "Data loaded from SQLite"}
+
+@app.get("/api/stats", response_model=AnalysisStats)
+async def get_analysis_stats():
+    """Get overall analysis statistics from the latest scan"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
     
-    # Placeholder response
-    return {
-        "datasets": [],
-        "message": "Power BI API integration coming soon"
-    }
+    try:
+        # Get latest analysis run stats
+        cursor.execute("""
+            SELECT run_date, workspaces_count, datasets_count, tables_count, 
+                   columns_count, measures_count, relationships_count
+            FROM analysis_runs 
+            ORDER BY run_date DESC 
+            LIMIT 1
+        """)
+        latest_run = cursor.fetchone()
+        
+        # Get workspaces on dedicated capacity count
+        cursor.execute("SELECT COUNT(*) FROM workspaces WHERE is_on_dedicated_capacity = 1")
+        dedicated_count = cursor.fetchone()[0]
+        
+        if latest_run:
+            return AnalysisStats(
+                latest_run_date=latest_run[0],
+                total_workspaces=latest_run[1] or 0,
+                total_datasets=latest_run[2] or 0,
+                total_tables=latest_run[3] or 0,
+                total_columns=latest_run[4] or 0,
+                total_measures=latest_run[5] or 0,
+                total_relationships=latest_run[6] or 0,
+                workspaces_on_dedicated=dedicated_count
+            )
+        else:
+            return AnalysisStats()
+    finally:
+        conn.close()
+
+@app.get("/api/workspaces/list", response_model=List[Workspace])
+async def get_workspaces_new(limit: int = Query(100, ge=1, le=1000)):
+    """Get all workspaces with dataset counts"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("""
+            SELECT w.id, w.name, w.type, w.is_on_dedicated_capacity,
+                   COUNT(d.id) as datasets_count
+            FROM workspaces w
+            LEFT JOIN datasets d ON w.id = d.workspace_id
+            GROUP BY w.id, w.name, w.type, w.is_on_dedicated_capacity
+            ORDER BY datasets_count DESC, w.name
+            LIMIT ?
+        """, (limit,))
+        
+        workspaces = []
+        for row in cursor.fetchall():
+            workspaces.append(Workspace(
+                id=row[0],
+                name=row[1],
+                type=row[2],
+                is_on_dedicated_capacity=bool(row[3]) if row[3] is not None else None,
+                datasets_count=row[4]
+            ))
+        
+        return workspaces
+    finally:
+        conn.close()
+
+@app.get("/api/datasets/list", response_model=List[Dataset])
+async def get_datasets_new(
+    workspace_id: Optional[str] = Query(None),
+    limit: int = Query(100, ge=1, le=1000)
+):
+    """Get datasets with workspace info and counts"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        base_query = """
+            SELECT d.id, d.name, d.workspace_id, w.name as workspace_name,
+                   d.created_date, d.modified_date,
+                   COUNT(DISTINCT t.id) as tables_count,
+                   COUNT(DISTINCT m.id) as measures_count
+            FROM datasets d
+            JOIN workspaces w ON d.workspace_id = w.id
+            LEFT JOIN tables t ON d.id = t.dataset_id
+            LEFT JOIN measures m ON d.id = m.dataset_id
+        """
+        
+        if workspace_id:
+            cursor.execute(f"""
+                {base_query}
+                WHERE d.workspace_id = ?
+                GROUP BY d.id, d.name, d.workspace_id, w.name, d.created_date, d.modified_date
+                ORDER BY d.name
+                LIMIT ?
+            """, (workspace_id, limit))
+        else:
+            cursor.execute(f"""
+                {base_query}
+                GROUP BY d.id, d.name, d.workspace_id, w.name, d.created_date, d.modified_date
+                ORDER BY tables_count DESC, d.name
+                LIMIT ?
+            """, (limit,))
+        
+        datasets = []
+        for row in cursor.fetchall():
+            datasets.append(Dataset(
+                id=row[0],
+                name=row[1],
+                workspace_id=row[2],
+                workspace_name=row[3],
+                created_date=row[4],
+                modified_date=row[5],
+                tables_count=row[6],
+                measures_count=row[7]
+            ))
+        
+        return datasets
+    finally:
+        conn.close()
+
+@app.get("/api/datasets/{dataset_id}/tables", response_model=List[Table])
+async def get_dataset_tables(dataset_id: str):
+    """Get all tables for a specific dataset"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("""
+            SELECT t.id, t.name, t.dataset_id, d.name as dataset_name, 
+                   t.row_count, COUNT(c.id) as columns_count
+            FROM tables t
+            JOIN datasets d ON t.dataset_id = d.id
+            LEFT JOIN columns c ON t.id = c.table_id
+            WHERE t.dataset_id = ?
+            GROUP BY t.id, t.name, t.dataset_id, d.name, t.row_count
+            ORDER BY t.name
+        """, (dataset_id,))
+        
+        tables = []
+        for row in cursor.fetchall():
+            tables.append(Table(
+                id=row[0],
+                name=row[1],
+                dataset_id=row[2],
+                dataset_name=row[3],
+                row_count=row[4],
+                columns_count=row[5]
+            ))
+        
+        return tables
+    finally:
+        conn.close()
+
+@app.get("/api/search")
+async def search(
+    q: str = Query(..., min_length=2),
+    type: Optional[str] = Query(None, pattern="^(workspace|dataset|table|column|measure)$")
+):
+    """Search across all Power BI entities"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        results = {"workspaces": [], "datasets": [], "tables": [], "columns": [], "measures": []}
+        search_term = f"%{q}%"
+        
+        if not type or type == "workspace":
+            cursor.execute("SELECT id, name, type FROM workspaces WHERE name LIKE ? LIMIT 10", (search_term,))
+            results["workspaces"] = [{"id": r[0], "name": r[1], "type": r[2]} for r in cursor.fetchall()]
+        
+        if not type or type == "dataset":
+            cursor.execute("""
+                SELECT d.id, d.name, w.name as workspace_name 
+                FROM datasets d 
+                JOIN workspaces w ON d.workspace_id = w.id 
+                WHERE d.name LIKE ? LIMIT 10
+            """, (search_term,))
+            results["datasets"] = [{"id": r[0], "name": r[1], "workspace_name": r[2]} for r in cursor.fetchall()]
+        
+        if not type or type == "table":
+            cursor.execute("""
+                SELECT t.id, t.name, d.name as dataset_name 
+                FROM tables t 
+                JOIN datasets d ON t.dataset_id = d.id 
+                WHERE t.name LIKE ? LIMIT 10
+            """, (search_term,))
+            results["tables"] = [{"id": r[0], "name": r[1], "dataset_name": r[2]} for r in cursor.fetchall()]
+        
+        if not type or type == "column":
+            cursor.execute("""
+                SELECT c.id, c.name, t.name as table_name, c.data_type 
+                FROM columns c 
+                JOIN tables t ON c.table_id = t.id 
+                WHERE c.name LIKE ? LIMIT 10
+            """, (search_term,))
+            results["columns"] = [{"id": r[0], "name": r[1], "table_name": r[2], "data_type": r[3]} for r in cursor.fetchall()]
+        
+        if not type or type == "measure":
+            cursor.execute("""
+                SELECT m.id, m.name, d.name as dataset_name 
+                FROM measures m 
+                JOIN datasets d ON m.dataset_id = d.id 
+                WHERE m.name LIKE ? LIMIT 10
+            """, (search_term,))
+            results["measures"] = [{"id": r[0], "name": r[1], "dataset_name": r[2]} for r in cursor.fetchall()]
+        
+        return results
+    finally:
+        conn.close()
 
 if __name__ == "__main__":
     import uvicorn
