@@ -1,10 +1,10 @@
-# Power BI Semantic Analyzer
+# Power BI Catalog
 
 > **⚠️ NOTE: DMV extraction and ADOMD.NET/pyadomd functionality only work on Windows.**
 >
 > The DLLs in the `lib/` folder are Windows-only and require the Microsoft Analysis Services OLEDB provider (MSOLAP) to be installed on your system. This project will **not work on macOS, Linux, or iOS** for DMV/metadata extraction via XMLA. If you need this functionality on non-Windows platforms, you must use a Windows machine or VM.
 
-Python module for large-scale analysis of semantic models published on Power BI Service. Designed for agentic integration (e.g., LangChain).
+A data catalog and internal marketplace for Power BI and data assets, providing asset search, tagging, metadata management, and access requests. Built with Python backend and modern web interface.
 
 ## Key Features
 - **Authentication Options**:
