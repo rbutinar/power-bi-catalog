@@ -106,6 +106,16 @@ async def root():
     """Health check endpoint"""
     return {"message": "Power BI Catalog API", "status": "running"}
 
+@app.get("/api/test")
+async def test_endpoint():
+    """Simple test endpoint"""
+    return {"message": "API is working", "endpoint": "test"}
+
+@app.get("/api/datasets/test-id/details")
+async def test_dataset_details():
+    """Test dataset details endpoint with hardcoded ID"""
+    return {"message": "Dataset details endpoint is working", "test": True}
+
 @app.get("/api/config", response_model=TenantConfigResponse)
 async def get_config():
     """
@@ -281,6 +291,107 @@ async def get_datasets_new(
     finally:
         conn.close()
 
+@app.get("/api/datasets/{dataset_id}/details")
+async def get_dataset_details(dataset_id: str):
+    """Get comprehensive details for a specific dataset"""
+    print(f"DEBUG: Dataset details requested for ID: {dataset_id}")
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # Get dataset basic info
+        cursor.execute("""
+            SELECT d.id, d.name, d.workspace_id, w.name as workspace_name,
+                   d.created_date, d.modified_date, w.is_on_dedicated_capacity
+            FROM datasets d
+            JOIN workspaces w ON d.workspace_id = w.id
+            WHERE d.id = ?
+        """, (dataset_id,))
+        
+        dataset_row = cursor.fetchone()
+        if not dataset_row:
+            raise HTTPException(status_code=404, detail="Dataset not found")
+        
+        # Get tables with column counts
+        cursor.execute("""
+            SELECT t.id, t.name, t.row_count, COUNT(c.id) as columns_count
+            FROM tables t
+            LEFT JOIN columns c ON t.id = c.table_id
+            WHERE t.dataset_id = ?
+            GROUP BY t.id, t.name, t.row_count
+            ORDER BY t.name
+        """, (dataset_id,))
+        
+        tables = []
+        for row in cursor.fetchall():
+            tables.append({
+                "id": row[0],
+                "name": row[1],
+                "row_count": row[2],
+                "columns_count": row[3]
+            })
+        
+        # Get measures
+        cursor.execute("""
+            SELECT id, name, expression, description, is_hidden
+            FROM measures
+            WHERE dataset_id = ?
+            ORDER BY name
+        """, (dataset_id,))
+        
+        measures = []
+        for row in cursor.fetchall():
+            measures.append({
+                "id": row[0],
+                "name": row[1],
+                "expression": row[2],
+                "description": row[3],
+                "is_hidden": bool(row[4])
+            })
+        
+        # Get relationships
+        cursor.execute("""
+            SELECT id, from_table, from_column, to_table, to_column, 
+                   cross_filtering_behavior, is_active
+            FROM relationships
+            WHERE dataset_id = ?
+            ORDER BY from_table, to_table
+        """, (dataset_id,))
+        
+        relationships = []
+        for row in cursor.fetchall():
+            relationships.append({
+                "id": row[0],
+                "from_table": row[1],
+                "from_column": row[2],
+                "to_table": row[3],
+                "to_column": row[4],
+                "cross_filtering_behavior": row[5],
+                "is_active": bool(row[6]) if row[6] is not None else None
+            })
+        
+        return {
+            "id": dataset_row[0],
+            "name": dataset_row[1],
+            "workspace_id": dataset_row[2],
+            "workspace_name": dataset_row[3],
+            "created_date": dataset_row[4],
+            "modified_date": dataset_row[5],
+            "is_on_dedicated_capacity": bool(dataset_row[6]) if dataset_row[6] is not None else None,
+            "tables": tables,
+            "measures": measures,
+            "relationships": relationships,
+            "summary": {
+                "total_tables": len(tables),
+                "total_measures": len(measures),
+                "total_relationships": len(relationships),
+                "total_columns": sum(t["columns_count"] for t in tables),
+                "total_rows": sum(t["row_count"] or 0 for t in tables)
+            }
+        }
+    finally:
+        conn.close()
+
 @app.get("/api/datasets/{dataset_id}/tables", response_model=List[Table])
 async def get_dataset_tables(dataset_id: str):
     """Get all tables for a specific dataset"""
@@ -311,6 +422,39 @@ async def get_dataset_tables(dataset_id: str):
             ))
         
         return tables
+    finally:
+        conn.close()
+
+@app.get("/api/tables/{table_id}/columns")
+async def get_table_columns(table_id: str):
+    """Get all columns for a specific table"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("""
+            SELECT c.id, c.name, c.data_type, c.description, c.is_hidden, 
+                   c.data_category, c.is_key, t.name as table_name
+            FROM columns c
+            JOIN tables t ON c.table_id = t.id
+            WHERE c.table_id = ?
+            ORDER BY c.name
+        """, (table_id,))
+        
+        columns = []
+        for row in cursor.fetchall():
+            columns.append({
+                "id": row[0],
+                "name": row[1],
+                "data_type": row[2],
+                "description": row[3],
+                "is_hidden": bool(row[4]) if row[4] is not None else None,
+                "data_category": row[5],
+                "is_key": bool(row[6]) if row[6] is not None else None,
+                "table_name": row[7]
+            })
+        
+        return columns
     finally:
         conn.close()
 

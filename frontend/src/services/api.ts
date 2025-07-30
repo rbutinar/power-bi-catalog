@@ -60,9 +60,60 @@ export interface SearchResults {
   measures: Array<{id: string, name: string, dataset_name: string}>;
 }
 
+export interface DatasetDetails {
+  id: string;
+  name: string;
+  workspace_id: string;
+  workspace_name: string;
+  created_date?: string;
+  modified_date?: string;
+  is_on_dedicated_capacity?: boolean;
+  tables: Array<{
+    id: string;
+    name: string;
+    row_count?: number;
+    columns_count: number;
+  }>;
+  measures: Array<{
+    id: string;
+    name: string;
+    expression?: string;
+    description?: string;
+    is_hidden: boolean;
+  }>;
+  relationships: Array<{
+    id: string;
+    from_table: string;
+    from_column: string;
+    to_table: string;
+    to_column: string;
+    cross_filtering_behavior?: string;
+    is_active?: boolean;
+  }>;
+  summary: {
+    total_tables: number;
+    total_measures: number;
+    total_relationships: number;
+    total_columns: number;
+    total_rows: number;
+  };
+}
+
+export interface Column {
+  id: string;
+  name: string;
+  data_type?: string;
+  description?: string;
+  is_hidden?: boolean;
+  data_category?: string;
+  is_key?: boolean;
+  table_name: string;
+}
+
 export class ApiService {
   private static async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
+    console.log('Making API request to:', url);
     
     try {
       const response = await fetch(url, {
@@ -73,8 +124,12 @@ export class ApiService {
         ...options,
       });
 
+      console.log('Response status:', response.status, response.statusText);
+
       if (!response.ok) {
-        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
       return await response.json();
@@ -134,5 +189,27 @@ export class ApiService {
       searchParams.append('type', type);
     }
     return this.request<SearchResults>(`/api/search?${searchParams.toString()}`);
+  }
+
+  static async getDatasetDetails(datasetId: string): Promise<DatasetDetails> {
+    console.log('Requesting dataset details for ID:', datasetId);
+    console.log('Full URL will be:', `${API_BASE_URL}/api/datasets/${datasetId}/details`);
+    return this.request<DatasetDetails>(`/api/datasets/${datasetId}/details`);
+  }
+
+  static async getTableColumns(tableId: string): Promise<Column[]> {
+    return this.request<Column[]>(`/api/tables/${tableId}/columns`);
+  }
+
+  // Debug method to test API connectivity
+  static async testConnection(): Promise<any> {
+    console.log('Testing API connection...');
+    return this.request<any>('/api/test');
+  }
+
+  // Test dataset details endpoint
+  static async testDatasetDetails(): Promise<any> {
+    console.log('Testing dataset details endpoint...');
+    return this.request<any>('/api/datasets/test-id/details');
   }
 }

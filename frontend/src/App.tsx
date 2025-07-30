@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import Sidebar from './components/Sidebar'
 import ConfigurationForm from './components/ConfigurationForm'
+import DataCatalog from './components/DataCatalog'
 import { ApiService, TenantConfigResponse, AnalysisStats, Workspace, Dataset } from './services/api'
 import './App.css'
 
@@ -211,18 +212,7 @@ function App() {
           </div>
         )
       case 'catalog':
-        return (
-          <div className="main-content">
-            <div className="page-header">
-              <h1>Data Catalog</h1>
-              <p>Browse and discover your Power BI assets</p>
-            </div>
-            <div className="coming-soon">
-              <h3>Coming Soon</h3>
-              <p>The data catalog view will show your scanned Power BI assets.</p>
-            </div>
-          </div>
-        )
+        return <DataCatalog isConfigured={isConfigured} />
       case 'workspaces':
         return (
           <div className="main-content">
