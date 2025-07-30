@@ -186,9 +186,9 @@ class ScanManager:
         try:
             self.update_scan_status(scan_id, ScanStatus.RUNNING, 0, "Starting Power BI tenant scan...")
             
-            # Prepare command arguments
+            # Prepare command arguments - use .venv38 for Power BI scanning
             cmd = [
-                str(Path(".venv/Scripts/python.exe").resolve()),
+                str(Path(".venv38/Scripts/python.exe").resolve()),
                 "pbi_tenant_analyzer.py"
             ]
             
@@ -207,6 +207,13 @@ class ScanManager:
             env["OUTPUT_DIR"] = scan_info["json_dir"]
             
             logger.info(f"Starting scan command: {' '.join(cmd)}")
+            logger.info(f"Working directory: {os.getcwd()}")
+            logger.info(f"Environment OUTPUT_DIR: {env.get('OUTPUT_DIR')}")
+            
+            # Test if python executable exists
+            python_path = Path(".venv38/Scripts/python.exe").resolve()
+            logger.info(f"Python executable path: {python_path}")
+            logger.info(f"Python executable exists: {python_path.exists()}")
             
             # Run the scanning process
             process = await asyncio.create_subprocess_exec(
@@ -251,9 +258,12 @@ class ScanManager:
                 return False
                 
         except Exception as e:
+            import traceback
             error_msg = f"Exception during scan: {str(e)}"
-            self.update_scan_status(scan_id, ScanStatus.FAILED, 0, error=error_msg)
-            logger.error(error_msg)
+            full_traceback = traceback.format_exc()
+            logger.error(f"Scan {scan_id} failed with exception: {error_msg}")
+            logger.error(f"Full traceback: {full_traceback}")
+            self.update_scan_status(scan_id, ScanStatus.FAILED, 0, error=f"{error_msg}\n\nTraceback:\n{full_traceback}")
             return False
             
     async def _import_scan_to_db(self, scan_id: str) -> bool:

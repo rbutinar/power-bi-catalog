@@ -1,45 +1,105 @@
 # Power BI Catalog
 
-> **⚠️ NOTE: DMV extraction and ADOMD.NET/pyadomd functionality only work on Windows.**
+> **⚠️ NOTE: Power BI metadata extraction (XMLA/pyadomd) only works on Windows.**
 >
-> The DLLs in the `lib/` folder are Windows-only and require the Microsoft Analysis Services OLEDB provider (MSOLAP) to be installed on your system. This project will **not work on macOS, Linux, or iOS** for DMV/metadata extraction via XMLA. If you need this functionality on non-Windows platforms, you must use a Windows machine or VM.
+> The DLLs in the `lib/` folder are Windows-only and require the Microsoft Analysis Services OLEDB provider (MSOLAP). This project will **not work on macOS, Linux, or iOS** for Power BI scanning functionality. Use a Windows machine or VM for full functionality.
 
-A data catalog and internal marketplace for Power BI and data assets, providing asset search, tagging, metadata management, and access requests. Built with Python backend and modern web interface.
+A modern **data catalog and internal marketplace** for Power BI and data assets. Features a **FastAPI backend** with **React frontend** providing asset search, metadata management, live scanning, and comprehensive data discovery.
+
+## Architecture
+
+- **Backend**: Python 3.11+ with FastAPI, SQLAlchemy, SQLite
+- **Frontend**: React with TypeScript, Vite, modern UI components
+- **Scanning**: Python 3.8 environment for Power BI legacy tool compatibility
+- **Development**: Optimized WSL2 multi-terminal workflow
 
 ## Key Features
-- **Authentication Options**:
-  - User authentication via MSAL device code flow (with public client_id, no app registration required)
-  - Service Principal authentication (app registration) for automated/headless scenarios
-- **Power BI REST API** navigation (workspaces, datasets)
-- **XMLA endpoint connection** (DMV extraction) with both user and service principal auth
-- **Tenant-wide analysis** to extract metadata from all accessible workspaces and datasets
-- **Structured JSON output** (Pydantic)
-- **LangChain wrapper** (Tool/RunnableLambda)
 
-## Setup
+### 🌐 Modern Web Interface
+- **Interactive Data Catalog**: Browse workspaces, datasets, tables, and columns
+- **Live Scanning**: Create and monitor Power BI tenant scans in real-time
+- **Advanced Search**: Find assets across your entire Power BI tenant
+- **Detailed Views**: Comprehensive metadata for datasets including relationships and measures
 
-### User Authentication (Interactive)
-- Copy `.env.example` to `.env` and set the required variables. At minimum, set:
-  ```
-  POWERBI_PUBLIC_CLIENT_ID=d3590ed6-52b3-4102-aeff-aad2292ab01c
-  ```
+### 🔐 Flexible Authentication
+- **Service Principal**: App registration for automated/headless scenarios (recommended)
+- **User Authentication**: MSAL device code flow fallback option
+- **Environment Configuration**: Secure .env file management
 
-### Service Principal Authentication (Automated/Headless)
-- Register an app in Azure AD and grant it appropriate permissions in Power BI Admin Portal
-- Add the following to your `.env` file:
-  ```
-  CLIENT_ID=your-app-registration-client-id
-  TENANT_ID=your-tenant-id
-  SECRET_VALUE=your-client-secret
-  ```
+### 📊 Power BI Integration
+- **REST API**: Full workspace and dataset navigation
+- **XMLA Endpoints**: Deep metadata extraction (DMV queries)
+- **Tenant-wide Analysis**: Scan all accessible workspaces and datasets
+- **Relationship Mapping**: Visualize data model connections
 
-## Requirements
-- Python 3.9+
-- See `requirements.txt` for dependencies
+## Quick Start
+
+### 1. Prerequisites
+- **Windows machine** (required for Power BI scanning)
+- **Python 3.11+** and **Python 3.8** (dual environment setup)
+- **Node.js 18+** (for React frontend)
+- **WSL2** (recommended for development)
+
+### 2. Environment Setup
+```bash
+# Clone repository
+git clone <repository-url>
+cd power-bi-catalog
+
+# Create virtual environments
+python3.11 -m venv .venv          # Web stack
+python3.8 -m venv .venv38          # Power BI tools
+
+# Install dependencies
+.venv/Scripts/pip install -r requirements.txt
+.venv38/Scripts/pip install pyadomd msal requests python-dotenv
+
+# Frontend setup
+cd frontend
+npm install
+```
+
+### 3. Configuration
+Create `.env` file in project root:
+```env
+# Required: Service Principal (recommended)
+CLIENT_ID=your-app-registration-client-id
+TENANT_ID=your-tenant-id
+SECRET_VALUE=your-client-secret
+
+# Optional: Public client fallback
+POWERBI_PUBLIC_CLIENT_ID=d3590ed6-52b3-4102-aeff-aad2292ab01c
+```
+
+### 4. Development Workflow
+**Multi-terminal setup** (WSL2 recommended):
+
+```bash
+# Terminal 1: Claude Code or development tools
+
+# Terminal 2: FastAPI Backend
+.venv/Scripts/python.exe -m uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+
+# Terminal 3: React Frontend  
+cd frontend && npm run dev
+```
+
+**Access Points:**
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:8000
+- **API Docs**: http://localhost:8000/docs
 
 ## Usage
 
-> **Note:** `add_service_principal_to_workspaces.py` is still a work in progress and may not be fully functional yet.
+### Web Interface (Recommended)
+1. **Start the application** using the development workflow above
+2. **Configure authentication** in the web interface or via .env file
+3. **Create scans** to analyze your Power BI tenant
+4. **Browse the catalog** to explore workspaces, datasets, and metadata
+5. **Search assets** across your entire Power BI environment
+
+### Command Line Interface
+For advanced users or automation scenarios:
 
 ### Tenant Analysis
 Run the main analyzer with service principal authentication:
